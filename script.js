@@ -9,7 +9,166 @@ const skillBars = document.querySelectorAll('.skill-progress');
 const sections = document.querySelectorAll('section');
 const contactForm = document.getElementById('contact-form');
 
-// Theme Management
+// Enhanced Visual Effects Manager
+class VisualEffectsManager {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        this.initializeParallaxEffect();
+        this.initializeGlowEffects();
+        this.initializeHoverAnimations();
+        this.initializeScrollAnimations();
+        this.initializeCursorEffects();
+    }
+
+    initializeParallaxEffect() {
+        const parallaxElements = document.querySelectorAll('.hero::before, .about::before, .projects::before');
+        
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.5;
+            
+            parallaxElements.forEach(element => {
+                element.style.transform = `translate3d(0, ${rate}px, 0)`;
+            });
+        });
+    }
+
+    initializeGlowEffects() {
+        const glowElements = document.querySelectorAll('.btn-primary, .project-card.featured, .social-link');
+        
+        glowElements.forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                element.style.filter = 'brightness(1.1) saturate(1.2)';
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                element.style.filter = 'brightness(1) saturate(1)';
+            });
+        });
+    }
+
+    initializeHoverAnimations() {
+        // Enhanced card hover effects
+        const cards = document.querySelectorAll('.skill-category, .project-card, .research-area, .contact-item');
+        
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', (e) => {
+                this.createRippleEffect(e, card);
+            });
+        });
+    }
+
+    createRippleEffect(event, element) {
+        const ripple = document.createElement('div');
+        const rect = element.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+        
+        ripple.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            left: ${x}px;
+            top: ${y}px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s ease-out;
+            pointer-events: none;
+            z-index: 0;
+        `;
+        
+        // Add ripple animation keyframes if not exists
+        if (!document.querySelector('#ripple-animation')) {
+            const style = document.createElement('style');
+            style.id = 'ripple-animation';
+            style.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(2);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        element.style.position = 'relative';
+        element.appendChild(ripple);
+        
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
+    }
+
+    initializeScrollAnimations() {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.8s ease-out forwards';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for scroll animations
+        const animatedElements = document.querySelectorAll('.hero-text > *, .about-text > *, .section-header');
+        animatedElements.forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            observer.observe(el);
+        });
+    }
+
+    initializeCursorEffects() {
+        // Create custom cursor for interactive elements
+        const cursor = document.createElement('div');
+        cursor.className = 'custom-cursor';
+        cursor.style.cssText = `
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.8), rgba(59, 130, 246, 0.2));
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.2s ease;
+            opacity: 0;
+        `;
+        document.body.appendChild(cursor);
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+            cursor.style.opacity = '1';
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursor.style.opacity = '0';
+        });
+
+        // Scale cursor on hover
+        const hoverElements = document.querySelectorAll('a, button, .btn, .social-link');
+        hoverElements.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'scale(2)';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'scale(1)';
+            });
+        });
+    }
+}
+
+// Enhanced Theme Manager with improved transitions
 class ThemeManager {
     constructor() {
         this.currentTheme = localStorage.getItem('theme') || 'light';
@@ -19,6 +178,18 @@ class ThemeManager {
     init() {
         this.setTheme(this.currentTheme);
         this.bindEvents();
+        this.addThemeTransitions();
+    }
+
+    addThemeTransitions() {
+        // Add smooth transitions for theme switching
+        const style = document.createElement('style');
+        style.textContent = `
+            * {
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     bindEvents() {
@@ -26,16 +197,24 @@ class ThemeManager {
     }
 
     setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        this.currentTheme = theme;
-        localStorage.setItem('theme', theme);
+        // Add loading animation
+        document.body.style.pointerEvents = 'none';
         
-        const icon = themeToggle.querySelector('i');
-        if (theme === 'dark') {
-            icon.className = 'fas fa-sun';
-        } else {
-            icon.className = 'fas fa-moon';
-        }
+        setTimeout(() => {
+            document.documentElement.setAttribute('data-theme', theme);
+            this.currentTheme = theme;
+            localStorage.setItem('theme', theme);
+            
+            const icon = themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+            
+            // Re-enable interactions
+            document.body.style.pointerEvents = 'auto';
+        }, 150);
     }
 
     toggleTheme() {
@@ -600,6 +779,9 @@ class App {
             this.components.set('scroll', new SmoothScroll());
             this.components.set('performance', new PerformanceMonitor());
 
+            // Enhanced visual effects
+            this.components.set('visualEffects', new VisualEffectsManager());
+
             // Optional components (only if elements exist)
             if (document.querySelector('.hero-title .typing-text')) {
                 const typingElement = document.querySelector('.hero-title .typing-text');
@@ -616,6 +798,7 @@ class App {
             }
 
             console.log('🚀 Application initialized successfully');
+            console.log('✨ Enhanced visual effects activated');
         } catch (error) {
             console.error('❌ Error initializing application:', error);
         }
