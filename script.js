@@ -396,8 +396,19 @@ class AnimationObserver {
     }
 
     init() {
-        // Initialize counter animations
+        // Initialize counter animations for hero stats
         heroStats.forEach(stat => {
+            const target = stat.getAttribute('data-target');
+            const counter = new CounterAnimation(stat, target);
+            
+            this.observe(stat, () => counter.animate(), {
+                threshold: 0.7
+            });
+        });
+
+        // Initialize counter animations for leadership stats
+        const leadershipStats = document.querySelectorAll('.leadership-stats .stat-number');
+        leadershipStats.forEach(stat => {
             const target = stat.getAttribute('data-target');
             const counter = new CounterAnimation(stat, target);
             
@@ -440,7 +451,7 @@ class AnimationObserver {
 
     initializeFadeAnimations() {
         const animatedElements = document.querySelectorAll(
-            '.project-card, .skill-category, .research-area, .contact-item, .highlight'
+            '.project-card, .skill-category, .research-area, .contact-item, .highlight, .leadership-card, .paper-card, .impact-card, .research-dashboard'
         );
 
         animatedElements.forEach((element, index) => {
@@ -453,6 +464,17 @@ class AnimationObserver {
                     element.style.opacity = '1';
                     element.style.transform = 'translateY(0)';
                 }, index * 100);
+            });
+        });
+
+        // Initialize dashboard metric counters
+        const dashboardMetrics = document.querySelectorAll('.metric-value[data-target]');
+        dashboardMetrics.forEach(metric => {
+            const target = metric.getAttribute('data-target');
+            const counter = new CounterAnimation(metric, target);
+            
+            this.observe(metric, () => counter.animate(), {
+                threshold: 0.7
             });
         });
     }
@@ -753,6 +775,82 @@ class PerformanceMonitor {
     }
 }
 
+// Research Papers Filter
+class PapersFilter {
+    constructor() {
+        this.filterButtons = document.querySelectorAll('.filter-btn');
+        this.paperCards = document.querySelectorAll('.paper-card');
+        this.init();
+    }
+
+    init() {
+        if (this.filterButtons.length === 0) return;
+        
+        this.bindEvents();
+        this.showAllPapers();
+    }
+
+    bindEvents() {
+        this.filterButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleFilterClick(button);
+            });
+        });
+    }
+
+    handleFilterClick(activeButton) {
+        // Update active button
+        this.filterButtons.forEach(btn => btn.classList.remove('active'));
+        activeButton.classList.add('active');
+
+        // Get filter value
+        const filter = activeButton.getAttribute('data-filter');
+        
+        // Filter papers
+        this.filterPapers(filter);
+    }
+
+    filterPapers(filter) {
+        this.paperCards.forEach((card, index) => {
+            const categories = card.getAttribute('data-category') || '';
+            const shouldShow = filter === 'all' || categories.includes(filter);
+            
+            if (shouldShow) {
+                // Show with staggered animation
+                setTimeout(() => {
+                    card.style.display = 'block';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 100);
+            } else {
+                // Hide immediately
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    card.style.display = 'none';
+                }, 300);
+            }
+        });
+    }
+
+    showAllPapers() {
+        this.paperCards.forEach((card, index) => {
+            card.style.display = 'block';
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 150);
+        });
+    }
+}
+
 // Main Application
 class App {
     constructor() {
@@ -781,6 +879,9 @@ class App {
 
             // Enhanced visual effects
             this.components.set('visualEffects', new VisualEffectsManager());
+
+            // Papers filter
+            this.components.set('papersFilter', new PapersFilter());
 
             // Optional components (only if elements exist)
             if (document.querySelector('.hero-title .typing-text')) {
