@@ -9,6 +9,1104 @@ const skillBars = document.querySelectorAll('.skill-progress');
 const sections = document.querySelectorAll('section');
 const contactForm = document.getElementById('contact-form');
 
+// Technical Showcases Elements
+const tabButtons = document.querySelectorAll('.tab-button');
+const showcaseContents = document.querySelectorAll('.showcase-content');
+const algoButtons = document.querySelectorAll('.algo-btn');
+const algoVisualizations = document.querySelectorAll('.algo-visualization');
+
+// Enhanced Live Code Editor
+class LiveCodeEditor {
+    constructor() {
+        this.currentLanguage = 'python';
+        this.codeExamples = {
+            python: `# Economic Time Series Analysis
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
+
+# Generate sample economic data
+np.random.seed(42)
+dates = pd.date_range('2020-01-01', periods=100, freq='D')
+gdp_growth = np.cumsum(np.random.normal(0.02, 0.1, 100))
+data = pd.Series(gdp_growth, index=dates)
+
+# Fit ARIMA model
+model = ARIMA(data, order=(1,1,1))
+fitted_model = model.fit()
+
+# Generate forecast
+forecast = fitted_model.forecast(steps=10)
+print('Economic Forecast:', forecast)
+
+# Calculate statistics
+print(f'Mean Growth: {data.mean():.4f}')
+print(f'Volatility: {data.std():.4f}')
+print(f'Max Drawdown: {(data / data.cummax() - 1).min():.4f}')`,
+            
+            r: `# Financial Portfolio Analysis
+library(quantmod)
+library(PerformanceAnalytics)
+
+# Generate sample portfolio returns
+set.seed(42)
+dates <- seq(as.Date("2020-01-01"), by="day", length.out=252)
+stocks <- c("Tech", "Finance", "Energy", "Healthcare")
+
+# Create random portfolio returns
+portfolio_returns <- matrix(rnorm(252*4, 0.0002, 0.02), 
+                           ncol=4, dimnames=list(NULL, stocks))
+portfolio_returns <- as.data.frame(portfolio_returns)
+
+# Calculate portfolio metrics
+portfolio_mean <- colMeans(portfolio_returns)
+portfolio_risk <- apply(portfolio_returns, 2, sd)
+correlation_matrix <- cor(portfolio_returns)
+
+print("Portfolio Statistics:")
+print(paste("Expected Returns:", round(portfolio_mean * 252, 4)))
+print(paste("Annual Volatility:", round(portfolio_risk * sqrt(252), 4)))
+print("Correlation Matrix:")
+print(round(correlation_matrix, 3))`,
+            
+            javascript: `// Financial Data Visualization
+class FinancialAnalyzer {
+    constructor(data) {
+        this.data = data;
+        this.returns = this.calculateReturns();
+    }
+    
+    calculateReturns() {
+        return this.data.map((price, i) => {
+            if (i === 0) return 0;
+            return (price - this.data[i-1]) / this.data[i-1];
+        }).slice(1);
+    }
+    
+    calculateSharpeRatio(riskFreeRate = 0.02) {
+        const meanReturn = this.returns.reduce((a, b) => a + b) / this.returns.length;
+        const volatility = Math.sqrt(
+            this.returns.reduce((sum, ret) => 
+                sum + Math.pow(ret - meanReturn, 2), 0) / this.returns.length
+        );
+        return (meanReturn * 252 - riskFreeRate) / (volatility * Math.sqrt(252));
+    }
+    
+    calculateVaR(confidence = 0.05) {
+        const sortedReturns = [...this.returns].sort((a, b) => a - b);
+        const index = Math.floor(confidence * sortedReturns.length);
+        return sortedReturns[index];
+    }
+}
+
+// Generate sample data
+const prices = Array.from({length: 252}, (_, i) => 
+    100 * Math.exp((Math.random() - 0.5) * 0.02 * i + Math.random() * 0.1)
+);
+
+const analyzer = new FinancialAnalyzer(prices);
+console.log('Sharpe Ratio:', analyzer.calculateSharpeRatio().toFixed(4));
+console.log('VaR (5%):', (analyzer.calculateVaR() * 100).toFixed(2) + '%');`
+        };
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.loadExample(this.currentLanguage);
+    }
+    
+    bindEvents() {
+        // Editor tab switching
+        document.querySelectorAll('.editor-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const lang = e.target.getAttribute('data-lang');
+                this.switchLanguage(lang);
+            });
+        });
+        
+        // Run code button
+        const runBtn = document.querySelector('.run-code-btn');
+        if (runBtn) {
+            runBtn.addEventListener('click', () => this.runCode());
+        }
+    }
+    
+    switchLanguage(language) {
+        this.currentLanguage = language;
+        
+        // Update active tab
+        document.querySelectorAll('.editor-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.getAttribute('data-lang') === language) {
+                tab.classList.add('active');
+            }
+        });
+        
+        this.loadExample(language);
+    }
+    
+    loadExample(language) {
+        const textarea = document.getElementById('code-input');
+        if (textarea && this.codeExamples[language]) {
+            textarea.value = this.codeExamples[language];
+        }
+    }
+    
+    runCode() {
+        const code = document.getElementById('code-input').value;
+        const output = document.getElementById('code-output');
+        
+        // Simulate code execution
+        output.innerHTML = '<div class="execution-animation">Running code...</div>';
+        
+        setTimeout(() => {
+            const result = this.simulateExecution(code);
+            output.innerHTML = result;
+        }, 2000);
+    }
+    
+    simulateExecution(code) {
+        // Simulate different outputs based on language and code content
+        if (this.currentLanguage === 'python') {
+            return `<div class="execution-result">
+                <div class="output-line"><span class="output-type">[OUTPUT]</span></div>
+                <div class="output-line">Economic Forecast: [0.0423, 0.0456, 0.0389, 0.0511, 0.0445, 0.0492, 0.0467, 0.0523, 0.0434, 0.0498]</div>
+                <div class="output-line">Mean Growth: 0.0456</div>
+                <div class="output-line">Volatility: 0.1023</div>
+                <div class="output-line">Max Drawdown: -0.1567</div>
+                <div class="output-line success"><span class="output-type">[SUCCESS]</span> Model fitted successfully</div>
+                <div class="output-line info"><span class="output-type">[INFO]</span> ARIMA(1,1,1) AIC: -245.67</div>
+            </div>`;
+        } else if (this.currentLanguage === 'r') {
+            return `<div class="execution-result">
+                <div class="output-line"><span class="output-type">[OUTPUT]</span></div>
+                <div class="output-line">Portfolio Statistics:</div>
+                <div class="output-line">Expected Returns: 0.0504 0.0487 0.0523 0.0465</div>
+                <div class="output-line">Annual Volatility: 0.3182 0.3245 0.3098 0.3267</div>
+                <div class="output-line">Correlation Matrix:</div>
+                <div class="output-line">     Tech Finance Energy Healthcare</div>
+                <div class="output-line">Tech  1.000   0.123  -0.045     0.234</div>
+                <div class="output-line">Finance 0.123 1.000   0.167    -0.089</div>
+                <div class="output-line">Energy -0.045 0.167   1.000     0.034</div>
+                <div class="output-line">Healthcare 0.234 -0.089 0.034   1.000</div>
+            </div>`;
+        } else {
+            return `<div class="execution-result">
+                <div class="output-line"><span class="output-type">[LOG]</span></div>
+                <div class="output-line">Sharpe Ratio: 1.2456</div>
+                <div class="output-line">VaR (5%): -2.34%</div>
+                <div class="output-line success"><span class="output-type">[SUCCESS]</span> Analysis completed</div>
+            </div>`;
+        }
+    }
+}
+
+// Algorithm Visualizations
+class AlgorithmVisualizations {
+    constructor() {
+        this.currentAlgo = 'sorting';
+        this.canvases = {};
+        this.animationFrames = {};
+        this.init();
+    }
+    
+    init() {
+        this.setupCanvases();
+        this.bindEvents();
+        this.initializeSortingVisualization();
+    }
+    
+    setupCanvases() {
+        const canvasIds = ['sort-canvas', 'regression-canvas', 'clustering-canvas', 'neural-canvas'];
+        canvasIds.forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                this.canvases[id] = {
+                    element: canvas,
+                    ctx: canvas.getContext('2d'),
+                    width: canvas.width,
+                    height: canvas.height
+                };
+            }
+        });
+    }
+    
+    bindEvents() {
+        // Algorithm selector
+        algoButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const algo = e.target.getAttribute('data-algo');
+                this.switchAlgorithm(algo);
+            });
+        });
+        
+        // Control buttons
+        this.bindSortingControls();
+        this.bindRegressionControls();
+        this.bindClusteringControls();
+        this.bindNeuralControls();
+    }
+    
+    switchAlgorithm(algorithm) {
+        this.currentAlgo = algorithm;
+        
+        // Update active button
+        algoButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('data-algo') === algorithm) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Show corresponding visualization
+        algoVisualizations.forEach(viz => {
+            viz.classList.remove('active');
+            if (viz.id === `${algorithm}-viz`) {
+                viz.classList.add('active');
+            }
+        });
+        
+        // Initialize specific visualization
+        this.initializeVisualization(algorithm);
+    }
+    
+    initializeVisualization(algorithm) {
+        switch(algorithm) {
+            case 'sorting':
+                this.initializeSortingVisualization();
+                break;
+            case 'regression':
+                this.initializeRegressionVisualization();
+                break;
+            case 'clustering':
+                this.initializeClusteringVisualization();
+                break;
+            case 'neural':
+                this.initializeNeuralVisualization();
+                break;
+        }
+    }
+    
+    bindSortingControls() {
+        const startBtn = document.getElementById('start-sort');
+        const resetBtn = document.getElementById('reset-sort');
+        
+        if (startBtn) startBtn.addEventListener('click', () => this.startSorting());
+        if (resetBtn) resetBtn.addEventListener('click', () => this.resetSorting());
+    }
+    
+    bindRegressionControls() {
+        const addBtn = document.getElementById('add-points');
+        const fitBtn = document.getElementById('fit-line');
+        const clearBtn = document.getElementById('clear-points');
+        
+        if (addBtn) addBtn.addEventListener('click', () => this.addRandomPoints());
+        if (fitBtn) fitBtn.addEventListener('click', () => this.fitRegressionLine());
+        if (clearBtn) clearBtn.addEventListener('click', () => this.clearPoints());
+    }
+    
+    bindClusteringControls() {
+        const generateBtn = document.getElementById('generate-data');
+        const runBtn = document.getElementById('run-kmeans');
+        
+        if (generateBtn) generateBtn.addEventListener('click', () => this.generateClusteringData());
+        if (runBtn) runBtn.addEventListener('click', () => this.runKMeans());
+    }
+    
+    bindNeuralControls() {
+        const trainBtn = document.getElementById('train-network');
+        const resetBtn = document.getElementById('reset-network');
+        
+        if (trainBtn) trainBtn.addEventListener('click', () => this.trainNeuralNetwork());
+        if (resetBtn) resetBtn.addEventListener('click', () => this.resetNeuralNetwork());
+    }
+    
+    // Sorting Algorithm Implementation
+    initializeSortingVisualization() {
+        const canvas = this.canvases['sort-canvas'];
+        if (!canvas) return;
+        
+        this.sortingData = Array.from({length: 50}, () => Math.floor(Math.random() * 300) + 20);
+        this.drawSortingBars();
+    }
+    
+    drawSortingBars(comparing = [], sorted = []) {
+        const canvas = this.canvases['sort-canvas'];
+        const ctx = canvas.ctx;
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        ctx.clearRect(0, 0, width, height);
+        
+        const barWidth = width / this.sortingData.length;
+        
+        this.sortingData.forEach((value, index) => {
+            let color = '#3b82f6';
+            if (comparing.includes(index)) color = '#ef4444';
+            if (sorted.includes(index)) color = '#10b981';
+            
+            ctx.fillStyle = color;
+            ctx.fillRect(index * barWidth, height - value, barWidth - 2, value);
+            
+            // Add value labels
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(value, index * barWidth + barWidth/2, height - value - 5);
+        });
+    }
+    
+    async startSorting() {
+        const algorithm = document.getElementById('sort-algorithm').value;
+        
+        switch(algorithm) {
+            case 'bubble':
+                await this.bubbleSort();
+                break;
+            case 'quick':
+                await this.quickSort(0, this.sortingData.length - 1);
+                break;
+            case 'merge':
+                await this.mergeSort(0, this.sortingData.length - 1);
+                break;
+        }
+    }
+    
+    async bubbleSort() {
+        const n = this.sortingData.length;
+        
+        for (let i = 0; i < n - 1; i++) {
+            for (let j = 0; j < n - i - 1; j++) {
+                this.drawSortingBars([j, j + 1]);
+                await this.sleep(100);
+                
+                if (this.sortingData[j] > this.sortingData[j + 1]) {
+                    [this.sortingData[j], this.sortingData[j + 1]] = [this.sortingData[j + 1], this.sortingData[j]];
+                }
+            }
+            this.drawSortingBars([], [n - 1 - i]);
+        }
+        
+        this.drawSortingBars([], Array.from({length: n}, (_, i) => i));
+    }
+    
+    resetSorting() {
+        this.initializeSortingVisualization();
+    }
+    
+    // Regression Visualization
+    initializeRegressionVisualization() {
+        const canvas = this.canvases['regression-canvas'];
+        if (!canvas) return;
+        
+        this.regressionPoints = [];
+        this.drawRegressionPlot();
+    }
+    
+    drawRegressionPlot() {
+        const canvas = this.canvases['regression-canvas'];
+        const ctx = canvas.ctx;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw axes
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(50, canvas.height - 50);
+        ctx.lineTo(canvas.width - 50, canvas.height - 50);
+        ctx.moveTo(50, 50);
+        ctx.lineTo(50, canvas.height - 50);
+        ctx.stroke();
+        
+        // Draw points
+        ctx.fillStyle = '#3b82f6';
+        this.regressionPoints.forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        
+        // Draw regression line if calculated
+        if (this.regressionLine) {
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(50, this.regressionLine.slope * 50 + this.regressionLine.intercept);
+            ctx.lineTo(canvas.width - 50, this.regressionLine.slope * (canvas.width - 50) + this.regressionLine.intercept);
+            ctx.stroke();
+        }
+    }
+    
+    addRandomPoints() {
+        const canvas = this.canvases['regression-canvas'];
+        
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * (canvas.width - 100) + 50;
+            const y = Math.random() * (canvas.height - 100) + 50;
+            this.regressionPoints.push({x, y});
+        }
+        
+        this.drawRegressionPlot();
+    }
+    
+    fitRegressionLine() {
+        if (this.regressionPoints.length < 2) return;
+        
+        // Calculate linear regression
+        const n = this.regressionPoints.length;
+        const sumX = this.regressionPoints.reduce((sum, p) => sum + p.x, 0);
+        const sumY = this.regressionPoints.reduce((sum, p) => sum + p.y, 0);
+        const sumXY = this.regressionPoints.reduce((sum, p) => sum + p.x * p.y, 0);
+        const sumXX = this.regressionPoints.reduce((sum, p) => sum + p.x * p.x, 0);
+        
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        
+        this.regressionLine = {slope, intercept};
+        this.drawRegressionPlot();
+    }
+    
+    clearPoints() {
+        this.regressionPoints = [];
+        this.regressionLine = null;
+        this.drawRegressionPlot();
+    }
+    
+    // K-Means Clustering
+    initializeClusteringVisualization() {
+        const canvas = this.canvases['clustering-canvas'];
+        if (!canvas) return;
+        
+        this.clusteringData = [];
+        this.centroids = [];
+        this.drawClusteringPlot();
+    }
+    
+    generateClusteringData() {
+        this.clusteringData = [];
+        
+        // Generate clustered data
+        const centers = [
+            {x: 200, y: 150},
+            {x: 500, y: 200},
+            {x: 350, y: 300}
+        ];
+        
+        centers.forEach(center => {
+            for (let i = 0; i < 30; i++) {
+                this.clusteringData.push({
+                    x: center.x + (Math.random() - 0.5) * 100,
+                    y: center.y + (Math.random() - 0.5) * 100,
+                    cluster: -1
+                });
+            }
+        });
+        
+        this.drawClusteringPlot();
+    }
+    
+    async runKMeans() {
+        const k = parseInt(document.getElementById('k-value').value);
+        
+        // Initialize centroids randomly
+        this.centroids = [];
+        for (let i = 0; i < k; i++) {
+            this.centroids.push({
+                x: Math.random() * 700 + 50,
+                y: Math.random() * 300 + 50,
+                color: `hsl(${i * 360 / k}, 70%, 60%)`
+            });
+        }
+        
+        // K-means iterations
+        for (let iteration = 0; iteration < 10; iteration++) {
+            // Assign points to nearest centroid
+            this.clusteringData.forEach(point => {
+                let minDist = Infinity;
+                let nearestCentroid = 0;
+                
+                this.centroids.forEach((centroid, index) => {
+                    const dist = Math.sqrt(
+                        Math.pow(point.x - centroid.x, 2) + 
+                        Math.pow(point.y - centroid.y, 2)
+                    );
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestCentroid = index;
+                    }
+                });
+                
+                point.cluster = nearestCentroid;
+            });
+            
+            // Update centroids
+            this.centroids.forEach((centroid, index) => {
+                const clusterPoints = this.clusteringData.filter(p => p.cluster === index);
+                if (clusterPoints.length > 0) {
+                    centroid.x = clusterPoints.reduce((sum, p) => sum + p.x, 0) / clusterPoints.length;
+                    centroid.y = clusterPoints.reduce((sum, p) => sum + p.y, 0) / clusterPoints.length;
+                }
+            });
+            
+            this.drawClusteringPlot();
+            await this.sleep(500);
+        }
+    }
+    
+    drawClusteringPlot() {
+        const canvas = this.canvases['clustering-canvas'];
+        const ctx = canvas.ctx;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw data points
+        this.clusteringData.forEach(point => {
+            const color = point.cluster >= 0 ? this.centroids[point.cluster].color : '#6b7280';
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        
+        // Draw centroids
+        this.centroids.forEach(centroid => {
+            ctx.fillStyle = centroid.color;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centroid.x, centroid.y, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+        });
+    }
+    
+    // Neural Network Visualization
+    initializeNeuralVisualization() {
+        const canvas = this.canvases['neural-canvas'];
+        if (!canvas) return;
+        
+        this.neuralNetwork = {
+            layers: [4, 6, 4, 2],
+            weights: [],
+            activations: [],
+            errors: []
+        };
+        
+        this.drawNeuralNetwork();
+    }
+    
+    drawNeuralNetwork() {
+        const canvas = this.canvases['neural-canvas'];
+        const ctx = canvas.ctx;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const layers = this.neuralNetwork.layers;
+        const layerSpacing = canvas.width / (layers.length + 1);
+        
+        // Draw connections
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        
+        for (let l = 0; l < layers.length - 1; l++) {
+            const currentLayerNodes = layers[l];
+            const nextLayerNodes = layers[l + 1];
+            
+            for (let i = 0; i < currentLayerNodes; i++) {
+                for (let j = 0; j < nextLayerNodes; j++) {
+                    const x1 = (l + 1) * layerSpacing;
+                    const y1 = (i + 1) * (canvas.height / (currentLayerNodes + 1));
+                    const x2 = (l + 2) * layerSpacing;
+                    const y2 = (j + 1) * (canvas.height / (nextLayerNodes + 1));
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // Draw nodes
+        layers.forEach((nodeCount, layerIndex) => {
+            const x = (layerIndex + 1) * layerSpacing;
+            const nodeSpacing = canvas.height / (nodeCount + 1);
+            
+            for (let nodeIndex = 0; nodeIndex < nodeCount; nodeIndex++) {
+                const y = (nodeIndex + 1) * nodeSpacing;
+                
+                ctx.fillStyle = layerIndex === 0 ? '#10b981' : 
+                               layerIndex === layers.length - 1 ? '#ef4444' : '#3b82f6';
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        });
+        
+        // Add labels
+        ctx.fillStyle = '#374151';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Input', layerSpacing, canvas.height - 20);
+        ctx.fillText('Hidden 1', layerSpacing * 2, canvas.height - 20);
+        ctx.fillText('Hidden 2', layerSpacing * 3, canvas.height - 20);
+        ctx.fillText('Output', layerSpacing * 4, canvas.height - 20);
+    }
+    
+    async trainNeuralNetwork() {
+        const epochs = parseInt(document.getElementById('epochs').value);
+        const learningRate = parseFloat(document.getElementById('learning-rate').value);
+        
+        for (let epoch = 0; epoch < Math.min(epochs, 20); epoch++) {
+            // Simulate training step with visual feedback
+            this.highlightActiveConnections();
+            await this.sleep(300);
+        }
+        
+        this.drawNeuralNetwork();
+    }
+    
+    highlightActiveConnections() {
+        // Add visual feedback for training
+        const canvas = this.canvases['neural-canvas'];
+        const ctx = canvas.ctx;
+        
+        // Highlight some connections in red to show activity
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 3;
+        
+        // Random connections to highlight
+        for (let i = 0; i < 5; i++) {
+            const x1 = Math.random() * canvas.width;
+            const y1 = Math.random() * canvas.height;
+            const x2 = x1 + (Math.random() - 0.5) * 100;
+            const y2 = y1 + (Math.random() - 0.5) * 100;
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+    }
+    
+    resetNeuralNetwork() {
+        this.initializeNeuralVisualization();
+    }
+    
+    // Utility function
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+}
+
+// Data Science Dashboard
+class DataScienceDashboard {
+    constructor() {
+        this.currentDataset = 'economic';
+        this.currentTimeframe = '1Y';
+        this.data = {};
+        this.charts = {};
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.generateSampleData();
+        this.createCharts();
+    }
+    
+    bindEvents() {
+        const datasetSelector = document.getElementById('dataset-selector');
+        const timeframeSelector = document.getElementById('timeframe-selector');
+        const refreshBtn = document.getElementById('refresh-data');
+        
+        if (datasetSelector) {
+            datasetSelector.addEventListener('change', (e) => {
+                this.currentDataset = e.target.value;
+                this.generateSampleData();
+                this.updateCharts();
+            });
+        }
+        
+        if (timeframeSelector) {
+            timeframeSelector.addEventListener('change', (e) => {
+                this.currentTimeframe = e.target.value;
+                this.generateSampleData();
+                this.updateCharts();
+            });
+        }
+        
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                this.generateSampleData();
+                this.updateCharts();
+            });
+        }
+    }
+    
+    generateSampleData() {
+        const timeframes = {'1M': 30, '3M': 90, '6M': 180, '1Y': 365};
+        const days = timeframes[this.currentTimeframe];
+        
+        this.data = {
+            dates: Array.from({length: days}, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (days - i));
+                return date;
+            }),
+            values: [],
+            correlationData: {}
+        };
+        
+        // Generate dataset-specific data
+        switch(this.currentDataset) {
+            case 'economic':
+                this.generateEconomicData(days);
+                break;
+            case 'financial':
+                this.generateFinancialData(days);
+                break;
+            case 'crypto':
+                this.generateCryptoData(days);
+                break;
+        }
+        
+        this.calculateStatistics();
+    }
+    
+    generateEconomicData(days) {
+        let value = 100;
+        this.data.values = Array.from({length: days}, () => {
+            value += (Math.random() - 0.5) * 2 + 0.02;
+            return value;
+        });
+        
+        this.data.correlationData = {
+            'GDP': this.data.values,
+            'Inflation': this.data.values.map(v => v * 0.8 + Math.random() * 10),
+            'Unemployment': this.data.values.map(v => 100 - v * 0.3 + Math.random() * 5),
+            'Interest Rate': this.data.values.map(v => v * 0.1 + Math.random() * 2)
+        };
+    }
+    
+    generateFinancialData(days) {
+        let value = 1000;
+        this.data.values = Array.from({length: days}, () => {
+            value *= (1 + (Math.random() - 0.5) * 0.05);
+            return value;
+        });
+        
+        this.data.correlationData = {
+            'Stock Price': this.data.values,
+            'Volume': this.data.values.map(v => v * 1000 + Math.random() * 50000),
+            'VIX': this.data.values.map(v => 30 - v * 0.01 + Math.random() * 10),
+            'Bond Yield': this.data.values.map(v => v * 0.002 + Math.random() * 1)
+        };
+    }
+    
+    generateCryptoData(days) {
+        let value = 50000;
+        this.data.values = Array.from({length: days}, () => {
+            value *= (1 + (Math.random() - 0.5) * 0.1);
+            return Math.max(value, 1000);
+        });
+        
+        this.data.correlationData = {
+            'BTC Price': this.data.values,
+            'ETH Price': this.data.values.map(v => v * 0.065 + Math.random() * 100),
+            'Market Cap': this.data.values.map(v => v * 19000000 + Math.random() * 1000000000),
+            'Dominance': this.data.values.map(v => 40 + Math.random() * 20)
+        };
+    }
+    
+    calculateStatistics() {
+        const values = this.data.values;
+        const n = values.length;
+        
+        const mean = values.reduce((a, b) => a + b) / n;
+        const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
+        const std = Math.sqrt(variance);
+        
+        // Calculate skewness
+        const skewness = values.reduce((sum, val) => sum + Math.pow((val - mean) / std, 3), 0) / n;
+        
+        // Calculate kurtosis
+        const kurtosis = values.reduce((sum, val) => sum + Math.pow((val - mean) / std, 4), 0) / n - 3;
+        
+        this.statistics = {mean, std, skewness, kurtosis};
+        this.updateStatisticsDisplay();
+    }
+    
+    updateStatisticsDisplay() {
+        const stats = this.statistics;
+        
+        document.getElementById('mean-value').textContent = stats.mean.toFixed(2);
+        document.getElementById('std-value').textContent = stats.std.toFixed(2);
+        document.getElementById('skew-value').textContent = stats.skewness.toFixed(3);
+        document.getElementById('kurt-value').textContent = stats.kurtosis.toFixed(3);
+    }
+    
+    createCharts() {
+        this.createTimeSeriesChart();
+        this.createCorrelationChart();
+        this.createVolatilityChart();
+    }
+    
+    createTimeSeriesChart() {
+        const canvas = document.getElementById('timeseries-chart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (this.data.values.length === 0) return;
+        
+        const padding = 40;
+        const width = canvas.width - 2 * padding;
+        const height = canvas.height - 2 * padding;
+        
+        const minValue = Math.min(...this.data.values);
+        const maxValue = Math.max(...this.data.values);
+        const valueRange = maxValue - minValue;
+        
+        // Draw axes
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, canvas.height - padding);
+        ctx.lineTo(canvas.width - padding, canvas.height - padding);
+        ctx.stroke();
+        
+        // Draw time series line
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        this.data.values.forEach((value, index) => {
+            const x = padding + (index / (this.data.values.length - 1)) * width;
+            const y = canvas.height - padding - ((value - minValue) / valueRange) * height;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        
+        ctx.stroke();
+        
+        // Add title
+        ctx.fillStyle = '#374151';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${this.currentDataset.toUpperCase()} Time Series`, canvas.width / 2, 20);
+    }
+    
+    createCorrelationChart() {
+        const canvas = document.getElementById('correlation-chart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const variables = Object.keys(this.data.correlationData);
+        const n = variables.length;
+        const cellSize = Math.min(canvas.width, canvas.height) / (n + 1);
+        const startX = (canvas.width - n * cellSize) / 2;
+        const startY = (canvas.height - n * cellSize) / 2;
+        
+        // Calculate correlation matrix
+        const correlations = [];
+        for (let i = 0; i < n; i++) {
+            correlations[i] = [];
+            for (let j = 0; j < n; j++) {
+                if (i === j) {
+                    correlations[i][j] = 1;
+                } else {
+                    const corr = this.calculateCorrelation(
+                        this.data.correlationData[variables[i]],
+                        this.data.correlationData[variables[j]]
+                    );
+                    correlations[i][j] = corr;
+                }
+            }
+        }
+        
+        // Draw correlation matrix
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                const correlation = correlations[i][j];
+                const intensity = Math.abs(correlation);
+                const color = correlation > 0 ? 
+                    `rgba(59, 130, 246, ${intensity})` : 
+                    `rgba(239, 68, 68, ${intensity})`;
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(
+                    startX + j * cellSize,
+                    startY + i * cellSize,
+                    cellSize - 1,
+                    cellSize - 1
+                );
+                
+                // Add correlation value
+                ctx.fillStyle = intensity > 0.5 ? '#ffffff' : '#000000';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(
+                    correlation.toFixed(2),
+                    startX + j * cellSize + cellSize / 2,
+                    startY + i * cellSize + cellSize / 2
+                );
+            }
+        }
+        
+        // Add title
+        ctx.fillStyle = '#374151';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Correlation Matrix', canvas.width / 2, 10);
+    }
+    
+    createVolatilityChart() {
+        const canvas = document.getElementById('volatility-chart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Calculate rolling volatility
+        const windowSize = 20;
+        const volatility = [];
+        
+        for (let i = windowSize; i < this.data.values.length; i++) {
+            const window = this.data.values.slice(i - windowSize, i);
+            const returns = window.slice(1).map((val, idx) => (val - window[idx]) / window[idx]);
+            const volatilityValue = Math.sqrt(returns.reduce((sum, ret) => sum + ret * ret, 0) / returns.length);
+            volatility.push(volatilityValue);
+        }
+        
+        if (volatility.length === 0) return;
+        
+        const padding = 40;
+        const width = canvas.width - 2 * padding;
+        const height = canvas.height - 2 * padding;
+        
+        const minVol = Math.min(...volatility);
+        const maxVol = Math.max(...volatility);
+        const volRange = maxVol - minVol;
+        
+        // Draw axes
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, canvas.height - padding);
+        ctx.lineTo(canvas.width - padding, canvas.height - padding);
+        ctx.stroke();
+        
+        // Draw volatility line
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        volatility.forEach((vol, index) => {
+            const x = padding + (index / (volatility.length - 1)) * width;
+            const y = canvas.height - padding - ((vol - minVol) / volRange) * height;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        
+        ctx.stroke();
+        
+        // Add title
+        ctx.fillStyle = '#374151';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Rolling Volatility (20-day)', canvas.width / 2, 20);
+    }
+    
+    calculateCorrelation(x, y) {
+        const n = Math.min(x.length, y.length);
+        const sumX = x.slice(0, n).reduce((a, b) => a + b, 0);
+        const sumY = y.slice(0, n).reduce((a, b) => a + b, 0);
+        const sumXY = x.slice(0, n).reduce((sum, xi, i) => sum + xi * y[i], 0);
+        const sumXX = x.slice(0, n).reduce((sum, xi) => sum + xi * xi, 0);
+        const sumYY = y.slice(0, n).reduce((sum, yi) => sum + yi * yi, 0);
+        
+        const numerator = n * sumXY - sumX * sumY;
+        const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+        
+        return denominator === 0 ? 0 : numerator / denominator;
+    }
+    
+    updateCharts() {
+        this.createTimeSeriesChart();
+        this.createCorrelationChart();
+        this.createVolatilityChart();
+    }
+}
+
+// Technical Showcases Manager
+class TechnicalShowcasesManager {
+    constructor() {
+        this.init();
+    }
+    
+    init() {
+        this.bindTabEvents();
+        this.initializeComponents();
+    }
+    
+    bindTabEvents() {
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const targetTab = e.target.getAttribute('data-tab');
+                this.switchTab(targetTab);
+            });
+        });
+    }
+    
+    switchTab(tabName) {
+        // Update active tab button
+        tabButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('data-tab') === tabName) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // Show corresponding content
+        showcaseContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.id === tabName) {
+                content.classList.add('active');
+            }
+        });
+    }
+    
+    initializeComponents() {
+        // Initialize each component
+        this.codeEditor = new LiveCodeEditor();
+        this.algorithmViz = new AlgorithmVisualizations();
+        this.dashboard = new DataScienceDashboard();
+    }
+}
+
 // Enhanced Visual Effects Manager
 class VisualEffectsManager {
     constructor() {
@@ -796,6 +1894,9 @@ class App {
             if (window.innerWidth > 768) {
                 this.components.set('particles', new ParticlesBackground());
             }
+
+            // Technical showcases
+            this.components.set('showcases', new TechnicalShowcasesManager());
 
             console.log('🚀 Application initialized successfully');
             console.log('✨ Enhanced visual effects activated');
