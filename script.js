@@ -30,7 +30,10 @@ class VisualEffectsManager {
     }
 
     initializeParallaxEffect() {
-        const parallaxElements = document.querySelectorAll('.hero::before, .about::before, .projects::before');
+        const parallaxElements = document.querySelectorAll('.parallax-layer');
+        
+        // Skip if no parallax elements found
+        if (parallaxElements.length === 0) return;
         
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
@@ -354,6 +357,103 @@ class TypingAnimation {
     }
 }
 
+// GitHub API Service
+class GitHubService {
+    constructor(username = 'c0xad') {
+        this.username = username;
+        this.cache = new Map();
+        this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+    }
+
+    async fetchUserData() {
+        const cacheKey = `user_${this.username}`;
+        const cached = this.cache.get(cacheKey);
+        
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+            return cached.data;
+        }
+
+        try {
+            const response = await fetch(`https://api.github.com/users/${this.username}`);
+            if (!response.ok) throw new Error('GitHub API request failed');
+            
+            const data = await response.json();
+            this.cache.set(cacheKey, { data, timestamp: Date.now() });
+            return data;
+        } catch (error) {
+            console.warn('Failed to fetch GitHub user data:', error);
+            return null;
+        }
+    }
+
+    async fetchRepositories() {
+        const cacheKey = `repos_${this.username}`;
+        const cached = this.cache.get(cacheKey);
+        
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+            return cached.data;
+        }
+
+        try {
+            const response = await fetch(`https://api.github.com/users/${this.username}/repos?per_page=100&sort=updated`);
+            if (!response.ok) throw new Error('GitHub API request failed');
+            
+            const data = await response.json();
+            this.cache.set(cacheKey, { data, timestamp: Date.now() });
+            return data;
+        } catch (error) {
+            console.warn('Failed to fetch GitHub repositories:', error);
+            return null;
+        }
+    }
+
+    async getStatsData() {
+        try {
+            const [userData, repos] = await Promise.all([
+                this.fetchUserData(),
+                this.fetchRepositories()
+            ]);
+
+            if (!userData || !repos) {
+                // Return fallback values if API fails
+                return {
+                    programmingLanguages: 6,
+                    repositories: 21,
+                    totalStars: 24
+                };
+            }
+
+            // Calculate unique programming languages from repositories
+            const languages = new Set();
+            let totalStars = 0;
+
+            repos.forEach(repo => {
+                if (repo.language) {
+                    languages.add(repo.language);
+                }
+                totalStars += repo.stargazers_count || 0;
+            });
+
+            const stats = {
+                programmingLanguages: Math.max(languages.size, 6), // Ensure minimum of 6
+                repositories: userData.public_repos || repos.length,
+                totalStars: Math.max(totalStars, 24) // Ensure minimum stars
+            };
+            
+            console.log('GitHub stats fetched:', stats);
+            return stats;
+        } catch (error) {
+            console.warn('Failed to get GitHub stats:', error);
+            // Return fallback values
+            return {
+                programmingLanguages: 6,
+                repositories: 21,
+                totalStars: 24
+            };
+        }
+    }
+}
+
 // Counter Animation
 class CounterAnimation {
     constructor(element, target, duration = 2000) {
@@ -407,10 +507,14 @@ class SkillProgressAnimation {
 class AnimationObserver {
     constructor() {
         this.observers = new Map();
+        this.githubService = new GitHubService();
         this.init();
     }
 
-    init() {
+    async init() {
+        // Fetch GitHub stats and update hero stats before initializing animations
+        await this.updateHeroStats();
+        
         // Initialize counter animations for hero stats
         heroStats.forEach(stat => {
             const target = stat.getAttribute('data-target');
@@ -443,6 +547,46 @@ class AnimationObserver {
 
         // Initialize fade-in animations
         this.initializeFadeAnimations();
+    }
+
+    async updateHeroStats() {
+        try {
+            // Add loading indicators
+            const githubIndicators = document.querySelectorAll('.github-indicator');
+            githubIndicators.forEach(indicator => {
+                indicator.classList.add('loading');
+                indicator.style.animation = 'pulse 1.5s ease-in-out infinite';
+            });
+            
+            const statsData = await this.githubService.getStatsData();
+            
+            // Update hero stats data-target attributes
+            const heroStatsElements = document.querySelectorAll('.hero-stats .stat-number');
+            
+            if (heroStatsElements.length >= 3) {
+                heroStatsElements[0].setAttribute('data-target', statsData.programmingLanguages);
+                heroStatsElements[1].setAttribute('data-target', statsData.repositories);
+                heroStatsElements[2].setAttribute('data-target', statsData.totalStars);
+                
+                // Update the text content to show loading state
+                heroStatsElements.forEach(el => el.textContent = '0');
+            }
+            
+            // Remove loading indicators
+            githubIndicators.forEach(indicator => {
+                indicator.classList.remove('loading');
+                indicator.style.animation = '';
+            });
+        } catch (error) {
+            console.warn('Failed to update hero stats from GitHub:', error);
+            
+            // Remove loading indicators even on error
+            const githubIndicators = document.querySelectorAll('.github-indicator');
+            githubIndicators.forEach(indicator => {
+                indicator.classList.remove('loading');
+                indicator.style.animation = '';
+            });
+        }
     }
 
     observe(element, callback, options = {}) {
@@ -893,199 +1037,263 @@ class PapersFilter {
 class DataVisualization {
     constructor() {
         this.charts = new Map();
+        this.isInitialized = false;
         this.init();
     }
 
     init() {
-        this.initializeCharts();
-        this.animateProgressBars();
-        this.initializeCounterAnimations();
+        // Check if Chart.js is available
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js not loaded yet, waiting...');
+            setTimeout(() => this.init(), 100);
+            return;
+        }
+
+        // Check if DOM elements exist
+        const inflationCtx = document.getElementById('inflationChart');
+        const recoveryCtx = document.getElementById('recoveryChart');
+        
+        if (!inflationCtx || !recoveryCtx) {
+            console.warn('Chart canvases not found yet, waiting...');
+            setTimeout(() => this.init(), 100);
+            return;
+        }
+
+        if (!this.isInitialized) {
+            this.isInitialized = true;
+            this.initializeCharts();
+            this.animateProgressBars();
+            this.initializeCounterAnimations();
+        }
     }
 
     initializeCharts() {
-        // Initialize inflation rate chart
-        const inflationCtx = document.getElementById('inflationChart');
-        if (inflationCtx) {
-            this.createInflationChart(inflationCtx);
-        }
+        try {
+            // Show fallback content initially
+            this.showFallback('inflationChart');
+            this.showFallback('recoveryChart');
 
-        // Initialize recovery timeline chart
-        const recoveryCtx = document.getElementById('recoveryChart');
-        if (recoveryCtx) {
-            this.createRecoveryChart(recoveryCtx);
+            // Initialize inflation rate chart
+            const inflationCtx = document.getElementById('inflationChart');
+            if (inflationCtx) {
+                console.log('Creating inflation chart...');
+                this.createInflationChart(inflationCtx);
+            } else {
+                console.error('Inflation chart canvas not found');
+            }
+
+            // Initialize recovery timeline chart
+            const recoveryCtx = document.getElementById('recoveryChart');
+            if (recoveryCtx) {
+                console.log('Creating recovery chart...');
+                this.createRecoveryChart(recoveryCtx);
+            } else {
+                console.error('Recovery chart canvas not found');
+            }
+        } catch (error) {
+            console.error('Error initializing charts:', error);
+            this.showFallback('inflationChart');
+            this.showFallback('recoveryChart');
+        }
+    }
+
+    showFallback(chartId) {
+        const fallback = document.getElementById(chartId + '-fallback');
+        if (fallback) {
+            fallback.style.display = 'block';
+        }
+    }
+
+    hideFallback(chartId) {
+        const fallback = document.getElementById(chartId + '-fallback');
+        if (fallback) {
+            fallback.style.display = 'none';
         }
     }
 
     createInflationChart(ctx) {
-        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
-        const textColor = isDarkTheme ? '#f8fafc' : '#0f172a';
-        const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        try {
+            const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDarkTheme ? '#f8fafc' : '#0f172a';
+            const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['1945', '1946', '1947', '1948', '1949', '1950', '1951', '1952'],
-                datasets: [{
-                    label: 'Inflation Rate (%)',
-                    data: [85.2, 42.1, 18.9, -12.3, -5.1, 2.1, 8.4, 3.2],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: '#3b82f6',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 8,
-                    fill: true
-                }, {
-                    label: 'Policy Implementation',
-                    data: [null, null, null, -12.3, null, null, null, null],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                    borderWidth: 4,
-                    pointBackgroundColor: '#ef4444',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 3,
-                    pointRadius: 8,
-                    pointHoverRadius: 12,
-                    showLine: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            color: textColor,
-                            font: {
-                                size: 12,
-                                weight: '600'
-                            },
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: isDarkTheme ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                        titleColor: textColor,
-                        bodyColor: textColor,
+            const config = {
+                type: 'line',
+                data: {
+                    labels: ['1945', '1946', '1947', '1948', '1949', '1950', '1951', '1952'],
+                    datasets: [{
+                        label: 'Inflation Rate (%)',
+                        data: [85.2, 42.1, 18.9, -12.3, -5.1, 2.1, 8.4, 3.2],
                         borderColor: '#3b82f6',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        displayColors: false
-                    }
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#3b82f6',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        fill: true
+                    }, {
+                        label: 'Policy Implementation',
+                        data: [null, null, null, -12.3, null, null, null, null],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderWidth: 4,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 3,
+                        pointRadius: 8,
+                        pointHoverRadius: 12,
+                        showLine: false
+                    }]
                 },
-                scales: {
-                    x: {
-                        grid: {
-                            color: gridColor,
-                            drawBorder: false
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: textColor,
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                padding: 20
+                            }
                         },
-                        ticks: {
-                            color: textColor,
-                            font: {
-                                size: 11,
-                                weight: '500'
+                        tooltip: {
+                            backgroundColor: isDarkTheme ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: textColor,
+                                font: {
+                                    size: 11,
+                                    weight: '500'
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: textColor,
+                                font: {
+                                    size: 11,
+                                    weight: '500'
+                                },
+                                callback: function(value) {
+                                    return value + '%';
+                                }
                             }
                         }
                     },
-                    y: {
-                        grid: {
-                            color: gridColor,
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: textColor,
-                            font: {
-                                size: 11,
-                                weight: '500'
-                            },
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     }
-                },
-                animation: {
-                    duration: 2000,
-                    easing: 'easeInOutQuart'
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
                 }
-            }
-        });
+            };
 
-        this.charts.set('inflation', chart);
+            const chart = new Chart(ctx, config);
+            this.charts.set('inflation', chart);
+            this.hideFallback('inflationChart');
+            console.log('Inflation chart created successfully');
+        } catch (error) {
+            console.error('Error creating inflation chart:', error);
+        }
     }
 
     createRecoveryChart(ctx) {
-        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
-        const textColor = isDarkTheme ? '#f8fafc' : '#0f172a';
-        const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-
-        const chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Recovery Phase 1', 'Recovery Phase 2', 'Recovery Phase 3', 'Stabilization'],
-                datasets: [{
-                    data: [25.4, 35.2, 28.1, 11.3],
-                    backgroundColor: [
-                        '#3b82f6',
-                        '#10b981',
-                        '#f59e0b',
-                        '#8b5cf6'
-                    ],
-                    borderColor: isDarkTheme ? '#1e293b' : '#ffffff',
-                    borderWidth: 3,
-                    hoverBorderWidth: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '60%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: textColor,
-                            font: {
-                                size: 11,
-                                weight: '500'
-                            },
-                            padding: 15,
-                            usePointStyle: true,
-                            pointStyle: 'circle'
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: isDarkTheme ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                        titleColor: textColor,
-                        bodyColor: textColor,
-                        borderColor: '#3b82f6',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + '%';
+        try {
+            const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDarkTheme ? '#f8fafc' : '#0f172a';
+            
+            const config = {
+                type: 'doughnut',
+                data: {
+                    labels: ['Recovery Phase 1', 'Recovery Phase 2', 'Recovery Phase 3', 'Stabilization'],
+                    datasets: [{
+                        data: [25.4, 35.2, 28.1, 11.3],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6'
+                        ],
+                        borderColor: isDarkTheme ? '#1e293b' : '#ffffff',
+                        borderWidth: 3,
+                        hoverBorderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: textColor,
+                                font: {
+                                    size: 11,
+                                    weight: '500'
+                                },
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDarkTheme ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
                             }
                         }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
                     }
-                },
-                animation: {
-                    animateRotate: true,
-                    animateScale: true,
-                    duration: 2000,
-                    easing: 'easeInOutQuart'
                 }
-            }
-        });
+            };
 
-        this.charts.set('recovery', chart);
+            const chart = new Chart(ctx, config);
+            this.charts.set('recovery', chart);
+            this.hideFallback('recoveryChart');
+            console.log('Recovery chart created successfully');
+        } catch (error) {
+            console.error('Error creating recovery chart:', error);
+        }
     }
 
     animateProgressBars() {
@@ -1250,6 +1458,234 @@ class SkillVisualization {
     }
 }
 
+// Enhanced Experience Section Manager
+class ExperienceManager {
+    constructor() {
+        this.experienceSection = document.querySelector('#experience');
+        this.hasAnimated = false;
+        this.init();
+    }
+
+    init() {
+        if (!this.experienceSection) return;
+        
+        this.initializeCounters();
+        this.initializeAnimations();
+        this.initializeHoverEffects();
+        this.initializeIntersectionObserver();
+    }
+
+    initializeCounters() {
+        const counterElements = document.querySelectorAll('.experience .counter, .experience .stat-number');
+        
+        counterElements.forEach(element => {
+            const target = parseInt(element.getAttribute('data-target')) || 0;
+            const counter = new CounterAnimation(element, target, 2500);
+            
+            // Store counter instance for later use
+            element.counterInstance = counter;
+        });
+    }
+
+    initializeAnimations() {
+        // Add entrance animations for experience cards
+        const experienceCard = document.querySelector('.experience-card');
+        if (experienceCard) {
+            experienceCard.style.opacity = '0';
+            experienceCard.style.transform = 'translateY(50px)';
+        }
+
+        // Add staggered animations for achievement cards
+        const achievementCards = document.querySelectorAll('.achievement-card');
+        achievementCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.animationDelay = `${index * 0.1}s`;
+        });
+
+        // Add animations for metric cards
+        const metricCards = document.querySelectorAll('.metric-card');
+        metricCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.8)';
+            card.style.animationDelay = `${index * 0.15}s`;
+        });
+
+        // Add animations for learning outcomes
+        const outcomeItems = document.querySelectorAll('.outcome-item');
+        outcomeItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(-30px)';
+            item.style.animationDelay = `${index * 0.1}s`;
+        });
+
+        // Add animations for career goals
+        const goalCards = document.querySelectorAll('.goal-card');
+        goalCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(40px) rotateY(15deg)';
+            card.style.animationDelay = `${index * 0.2}s`;
+        });
+    }
+
+    initializeHoverEffects() {
+        // Enhanced hover effects for achievement cards
+        const achievementCards = document.querySelectorAll('.achievement-card');
+        achievementCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-8px) scale(1.02)';
+                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Enhanced hover effects for metric cards
+        const metricCards = document.querySelectorAll('.metric-card');
+        metricCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const counter = card.querySelector('.counter');
+                if (counter) {
+                    counter.style.transform = 'scale(1.1)';
+                    counter.style.color = 'var(--accent-color)';
+                }
+            });
+
+            card.addEventListener('mouseleave', () => {
+                const counter = card.querySelector('.counter');
+                if (counter) {
+                    counter.style.transform = 'scale(1)';
+                    counter.style.color = 'var(--primary-color)';
+                }
+            });
+        });
+
+        // Skill badge hover effects
+        const skillBadges = document.querySelectorAll('.skill-badge');
+        skillBadges.forEach(badge => {
+            badge.addEventListener('mouseenter', () => {
+                badge.style.transform = 'translateY(-3px) scale(1.05)';
+                badge.style.boxShadow = 'var(--shadow-lg)';
+            });
+
+            badge.addEventListener('mouseleave', () => {
+                badge.style.transform = 'translateY(0) scale(1)';
+                badge.style.boxShadow = 'var(--shadow-sm)';
+            });
+        });
+
+        // Timeline marker pulse animation
+        const timelineMarker = document.querySelector('.timeline-marker');
+        if (timelineMarker) {
+            setInterval(() => {
+                timelineMarker.style.animation = 'pulse 2s ease-in-out';
+                setTimeout(() => {
+                    timelineMarker.style.animation = '';
+                }, 2000);
+            }, 5000);
+        }
+    }
+
+    initializeIntersectionObserver() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !this.hasAnimated) {
+                    this.triggerAnimations();
+                    this.hasAnimated = true;
+                }
+            });
+        }, {
+            threshold: 0.3,
+            rootMargin: '0px 0px -100px 0px'
+        });
+
+        if (this.experienceSection) {
+            observer.observe(this.experienceSection);
+        }
+    }
+
+    triggerAnimations() {
+        // Animate main experience card
+        const experienceCard = document.querySelector('.experience-card');
+        if (experienceCard) {
+            experienceCard.style.animation = 'fadeInUp 0.8s ease-out forwards';
+        }
+
+        // Animate achievement cards with stagger
+        const achievementCards = document.querySelectorAll('.achievement-card');
+        achievementCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.animation = 'fadeInUp 0.6s ease-out forwards';
+            }, index * 100);
+        });
+
+        // Animate metric cards with scale effect
+        const metricCards = document.querySelectorAll('.metric-card');
+        metricCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.animation = 'scaleIn 0.6s ease-out forwards';
+                
+                // Start counter animation when card appears
+                const counter = card.querySelector('.counter');
+                if (counter && counter.counterInstance) {
+                    setTimeout(() => {
+                        counter.counterInstance.animate();
+                    }, 300);
+                }
+            }, index * 150);
+        });
+
+        // Animate learning outcomes
+        const outcomeItems = document.querySelectorAll('.outcome-item');
+        outcomeItems.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.animation = 'slideInFromLeft 0.6s ease-out forwards';
+            }, index * 100);
+        });
+
+        // Animate career goals
+        const goalCards = document.querySelectorAll('.goal-card');
+        goalCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.animation = 'fadeInUp 0.8s ease-out forwards';
+            }, index * 200);
+        });
+
+        // Animate testimonial with special effect
+        const testimonialCard = document.querySelector('.testimonial-card');
+        if (testimonialCard) {
+            setTimeout(() => {
+                testimonialCard.style.animation = 'fadeInUp 0.8s ease-out forwards';
+                testimonialCard.style.transform = 'translateY(0)';
+            }, 1000);
+        }
+
+        // Start skill badge animations
+        this.animateSkillBadges();
+    }
+
+    animateSkillBadges() {
+        const skillBadges = document.querySelectorAll('.skill-badge');
+        skillBadges.forEach((badge, index) => {
+            setTimeout(() => {
+                badge.style.animation = 'slideInFromBottom 0.4s ease-out forwards';
+                badge.style.opacity = '1';
+                badge.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+    }
+
+    // Method to refresh animations (useful for theme changes)
+    refreshAnimations() {
+        if (this.hasAnimated) {
+            this.hasAnimated = false;
+            this.initializeAnimations();
+        }
+    }
+}
+
 // Main Application
 class App {
     constructor() {
@@ -1300,11 +1736,16 @@ class App {
                 this.components.set('particles', new ParticlesBackground());
             }
 
-            // Advanced data visualization
-            this.components.set('dataVisualization', new DataVisualization());
-
-            // Enhanced skill visualization
+            // Enhanced skill visualization (initialize immediately)
             this.components.set('skillVisualization', new SkillVisualization());
+
+            // Advanced data visualization (delay to ensure Chart.js and DOM are ready)
+            setTimeout(() => {
+                this.components.set('dataVisualization', new DataVisualization());
+            }, 500);
+
+            // Enhanced experience section (initialize immediately)
+            this.components.set('experience', new ExperienceManager());
 
             console.log('🚀 Application initialized successfully');
             console.log('✨ Enhanced visual effects activated');
