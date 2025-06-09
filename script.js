@@ -1482,35 +1482,34 @@ class ExperienceManager {
     }
 
     initializeBasicAnimations() {
-        // Add entrance animations for experience cards
+        // Don't hide content initially - let it be visible by default
+        // Animation will be triggered on scroll
+        
+        // Set initial states for smooth animations
         const experienceCard = document.querySelector('.experience-card');
         if (experienceCard) {
-            experienceCard.style.opacity = '0';
-            experienceCard.style.transform = 'translateY(50px)';
+            experienceCard.style.transition = 'all 0.8s ease-out';
         }
 
-        // Add staggered animations for achievement cards
+        // Add animation delays for achievement cards
         const achievementCards = document.querySelectorAll('.achievement-card');
         achievementCards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            card.style.animationDelay = `${index * 0.1}s`;
+            card.style.transition = 'all 0.6s ease-out';
+            card.style.transitionDelay = `${index * 0.1}s`;
         });
 
-        // Add animations for learning outcomes
+        // Add animation delays for learning outcomes
         const outcomeItems = document.querySelectorAll('.outcome-item');
         outcomeItems.forEach((item, index) => {
-            item.style.opacity = '0';
-            item.style.transform = 'translateX(-30px)';
-            item.style.animationDelay = `${index * 0.1}s`;
+            item.style.transition = 'all 0.6s ease-out';
+            item.style.transitionDelay = `${index * 0.1}s`;
         });
 
-        // Add animations for career goals
+        // Add animation delays for career goals
         const goalCards = document.querySelectorAll('.goal-card');
         goalCards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(40px) rotateY(15deg)';
-            card.style.animationDelay = `${index * 0.2}s`;
+            card.style.transition = 'all 0.8s ease-out';
+            card.style.transitionDelay = `${index * 0.2}s`;
         });
     }
 
@@ -1585,50 +1584,14 @@ class ExperienceManager {
     }
 
     triggerAnimations() {
-        // Animate main experience card
+        // Add subtle highlight effects when section comes into view
         const experienceCard = document.querySelector('.experience-card');
         if (experienceCard) {
-            experienceCard.style.animation = 'fadeInUp 0.8s ease-out forwards';
+            experienceCard.classList.add('animated');
         }
-
-        // Animate achievement cards with stagger
-        const achievementCards = document.querySelectorAll('.achievement-card');
-        achievementCards.forEach((card, index) => {
-            setTimeout(() => {
-                card.style.animation = 'fadeInUp 0.6s ease-out forwards';
-            }, index * 100);
-        });
-
-        // Animate learning outcomes
-        const outcomeItems = document.querySelectorAll('.outcome-item');
-        outcomeItems.forEach((item, index) => {
-            setTimeout(() => {
-                item.style.animation = 'slideInFromLeft 0.6s ease-out forwards';
-            }, index * 100);
-        });
-
-        // Animate career goals
-        const goalCards = document.querySelectorAll('.goal-card');
-        goalCards.forEach((card, index) => {
-            setTimeout(() => {
-                card.style.animation = 'fadeInUp 0.8s ease-out forwards';
-            }, index * 200);
-        });
-
-        // Animate testimonial with special effect
-        const testimonialCard = document.querySelector('.testimonial-card');
-        if (testimonialCard) {
-            setTimeout(() => {
-                testimonialCard.style.animation = 'fadeInUp 0.8s ease-out forwards';
-                testimonialCard.style.transform = 'translateY(0)';
-            }, 1000);
-        }
-
-        // Start skill badge animations
-        this.animateSkillBadges();
 
         // Start counters for basic metric cards
-        const basicCounters = document.querySelectorAll('.metric-card .counter');
+        const basicCounters = document.querySelectorAll('.metric-card .counter, .kpi-card .counter');
         basicCounters.forEach(counter => {
             if (counter.counterInstance) {
                 setTimeout(() => {
@@ -1636,18 +1599,34 @@ class ExperienceManager {
                 }, 500);
             }
         });
-    }
 
-    animateSkillBadges() {
-        const skillBadges = document.querySelectorAll('.skill-badge');
-        skillBadges.forEach((badge, index) => {
-            setTimeout(() => {
-                badge.style.animation = 'slideInFromBottom 0.4s ease-out forwards';
-                badge.style.opacity = '1';
-                badge.style.transform = 'translateY(0)';
-            }, index * 50);
+        // Start counters even without counter instances
+        const allCounters = document.querySelectorAll('.counter');
+        allCounters.forEach(counter => {
+            this.startCounter(counter);
         });
     }
+
+    startCounter(element) {
+        const target = parseInt(element.getAttribute('data-target')) || 0;
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        let current = 0;
+
+        const updateCounter = () => {
+            current += increment;
+            if (current < target) {
+                element.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                element.textContent = target;
+            }
+        };
+
+        updateCounter();
+    }
+
+    // Skill badges are now visible by default - no need for complex animations
 
     // Method to refresh animations (useful for theme changes)
     refreshAnimations() {

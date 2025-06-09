@@ -3292,6 +3292,8 @@ section {
     position: relative;
     overflow: hidden;
     transition: all 0.4s var(--ease-in-out-expo);
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .experience-card::before {
@@ -3399,6 +3401,8 @@ section {
     transition: all 0.3s var(--ease-in-out-circ);
     position: relative;
     overflow: hidden;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .achievement-card::before {
@@ -3529,6 +3533,8 @@ section {
     font-weight: 500;
     box-shadow: var(--shadow-sm);
     transition: all 0.3s ease;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .skill-badge:hover {
@@ -3646,6 +3652,8 @@ section {
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
     transition: all 0.3s var(--ease-in-out-circ);
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .outcome-item:hover {
@@ -3774,6 +3782,8 @@ section {
     transition: all 0.3s var(--ease-in-out-circ);
     position: relative;
     overflow: hidden;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .goal-card::before {
@@ -4022,6 +4032,8 @@ section {
     overflow: hidden;
     transition: all 0.4s var(--ease-in-out-expo);
     cursor: pointer;
+    opacity: 1;
+    transform: scale(1);
 }
 
 .kpi-card::before {
@@ -4435,6 +4447,17 @@ section {
         transform: scale(1.02);
         opacity: 0.9;
     }
+}
+
+/* Subtle highlight animation */
+.experience-card.animated {
+    animation: subtleGlow 1s ease-in-out;
+}
+
+@keyframes subtleGlow {
+    0% { box-shadow: var(--shadow-lg); }
+    50% { box-shadow: var(--shadow-xl), 0 0 30px rgba(37, 99, 235, 0.1); }
+    100% { box-shadow: var(--shadow-lg); }
 }
 
 /* Responsive Enhancements */
