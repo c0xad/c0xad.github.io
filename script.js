@@ -1458,10 +1458,11 @@ class SkillVisualization {
     }
 }
 
-// Enhanced Experience Section Manager
+// Comprehensive Experience Section Manager
 class ExperienceManager {
     constructor() {
         this.experienceSection = document.querySelector('#experience');
+        this.dashboard = null;
         this.hasAnimated = false;
         this.init();
     }
@@ -1469,25 +1470,18 @@ class ExperienceManager {
     init() {
         if (!this.experienceSection) return;
         
+        // Initialize dashboard if premium dashboard exists
+        if (document.querySelector('.premium-dashboard')) {
+            this.dashboard = new ExperienceDashboard();
+        }
+        
+        this.initializeBasicAnimations();
         this.initializeCounters();
-        this.initializeAnimations();
         this.initializeHoverEffects();
         this.initializeIntersectionObserver();
     }
 
-    initializeCounters() {
-        const counterElements = document.querySelectorAll('.experience .counter, .experience .stat-number');
-        
-        counterElements.forEach(element => {
-            const target = parseInt(element.getAttribute('data-target')) || 0;
-            const counter = new CounterAnimation(element, target, 2500);
-            
-            // Store counter instance for later use
-            element.counterInstance = counter;
-        });
-    }
-
-    initializeAnimations() {
+    initializeBasicAnimations() {
         // Add entrance animations for experience cards
         const experienceCard = document.querySelector('.experience-card');
         if (experienceCard) {
@@ -1501,14 +1495,6 @@ class ExperienceManager {
             card.style.opacity = '0';
             card.style.transform = 'translateY(30px)';
             card.style.animationDelay = `${index * 0.1}s`;
-        });
-
-        // Add animations for metric cards
-        const metricCards = document.querySelectorAll('.metric-card');
-        metricCards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.8)';
-            card.style.animationDelay = `${index * 0.15}s`;
         });
 
         // Add animations for learning outcomes
@@ -1528,6 +1514,18 @@ class ExperienceManager {
         });
     }
 
+    initializeCounters() {
+        const counterElements = document.querySelectorAll('.experience .counter, .experience .stat-number');
+        
+        counterElements.forEach(element => {
+            const target = parseInt(element.getAttribute('data-target')) || 0;
+            const counter = new CounterAnimation(element, target, 2500);
+            
+            // Store counter instance for later use
+            element.counterInstance = counter;
+        });
+    }
+
     initializeHoverEffects() {
         // Enhanced hover effects for achievement cards
         const achievementCards = document.querySelectorAll('.achievement-card');
@@ -1539,26 +1537,6 @@ class ExperienceManager {
 
             card.addEventListener('mouseleave', () => {
                 card.style.transform = 'translateY(0) scale(1)';
-            });
-        });
-
-        // Enhanced hover effects for metric cards
-        const metricCards = document.querySelectorAll('.metric-card');
-        metricCards.forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                const counter = card.querySelector('.counter');
-                if (counter) {
-                    counter.style.transform = 'scale(1.1)';
-                    counter.style.color = 'var(--accent-color)';
-                }
-            });
-
-            card.addEventListener('mouseleave', () => {
-                const counter = card.querySelector('.counter');
-                if (counter) {
-                    counter.style.transform = 'scale(1)';
-                    counter.style.color = 'var(--primary-color)';
-                }
             });
         });
 
@@ -1621,22 +1599,6 @@ class ExperienceManager {
             }, index * 100);
         });
 
-        // Animate metric cards with scale effect
-        const metricCards = document.querySelectorAll('.metric-card');
-        metricCards.forEach((card, index) => {
-            setTimeout(() => {
-                card.style.animation = 'scaleIn 0.6s ease-out forwards';
-                
-                // Start counter animation when card appears
-                const counter = card.querySelector('.counter');
-                if (counter && counter.counterInstance) {
-                    setTimeout(() => {
-                        counter.counterInstance.animate();
-                    }, 300);
-                }
-            }, index * 150);
-        });
-
         // Animate learning outcomes
         const outcomeItems = document.querySelectorAll('.outcome-item');
         outcomeItems.forEach((item, index) => {
@@ -1664,6 +1626,16 @@ class ExperienceManager {
 
         // Start skill badge animations
         this.animateSkillBadges();
+
+        // Start counters for basic metric cards
+        const basicCounters = document.querySelectorAll('.metric-card .counter');
+        basicCounters.forEach(counter => {
+            if (counter.counterInstance) {
+                setTimeout(() => {
+                    counter.counterInstance.animate();
+                }, 500);
+            }
+        });
     }
 
     animateSkillBadges() {
@@ -1681,8 +1653,421 @@ class ExperienceManager {
     refreshAnimations() {
         if (this.hasAnimated) {
             this.hasAnimated = false;
-            this.initializeAnimations();
+            this.initializeBasicAnimations();
         }
+        
+        // Also refresh dashboard if it exists
+        if (this.dashboard && this.dashboard.updateChartsTheme) {
+            this.dashboard.updateChartsTheme();
+        }
+    }
+
+    // Method to get dashboard instance
+    getDashboard() {
+        return this.dashboard;
+    }
+
+    destroy() {
+        if (this.dashboard && this.dashboard.destroy) {
+            this.dashboard.destroy();
+        }
+    }
+}
+
+// Advanced Experience Dashboard Manager
+class ExperienceDashboard {
+    constructor() {
+        this.charts = new Map();
+        this.currentView = 'overview';
+        this.animationTimers = [];
+        this.init();
+    }
+
+    init() {
+        this.initializeDashboardControls();
+        this.initializeCharts();
+        this.initializeKPIAnimations();
+        this.initializeProgressBars();
+        this.initializeTimelineInteractions();
+    }
+
+    initializeDashboardControls() {
+        const buttons = document.querySelectorAll('.dashboard-btn');
+        buttons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const view = e.target.getAttribute('data-view');
+                this.switchView(view);
+                
+                // Update active state
+                buttons.forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+    }
+
+    switchView(view) {
+        this.currentView = view;
+        
+        // Add view switching animation
+        const dashboard = document.querySelector('.premium-dashboard');
+        if (dashboard) {
+            dashboard.style.transform = 'scale(0.98)';
+            dashboard.style.opacity = '0.7';
+            
+            setTimeout(() => {
+                dashboard.style.transform = 'scale(1)';
+                dashboard.style.opacity = '1';
+                this.updateViewContent(view);
+            }, 150);
+        }
+    }
+
+    updateViewContent(view) {
+        // This could be expanded to show different content based on view
+        console.log(`Switching to ${view} view`);
+        
+        // Trigger chart updates based on view
+        if (view === 'performance') {
+            this.animatePerformanceChart();
+        } else if (view === 'growth') {
+            this.animateGrowthTimeline();
+        }
+    }
+
+    initializeCharts() {
+        // Initialize Performance Chart
+        const performanceCtx = document.getElementById('performanceChart');
+        if (performanceCtx && typeof Chart !== 'undefined') {
+            this.createPerformanceChart(performanceCtx);
+        }
+
+        // Initialize Skill Distribution Chart
+        const skillCtx = document.getElementById('skillDistributionChart');
+        if (skillCtx && typeof Chart !== 'undefined') {
+            this.createSkillDistributionChart(skillCtx);
+        }
+    }
+
+    createPerformanceChart(ctx) {
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+                datasets: [{
+                    label: 'Applications Processed',
+                    data: [8, 15, 22, 28, 35, 40, 45, 50],
+                    backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }, {
+                    label: 'Risk Assessments',
+                    data: [5, 10, 15, 20, 25, 28, 30, 35],
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false // We have custom legend
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                            drawBorder: false,
+                        },
+                        ticks: {
+                            color: 'var(--text-secondary)',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                        },
+                        ticks: {
+                            color: 'var(--text-secondary)',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeInOutQuart',
+                }
+            }
+        });
+
+        this.charts.set('performance', chart);
+    }
+
+    createSkillDistributionChart(ctx) {
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Financial Analysis', 'Risk Management', 'Client Relations', 'Data Analysis'],
+                datasets: [{
+                    data: [40, 25, 20, 15],
+                    backgroundColor: [
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(6, 182, 212, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(6, 182, 212, 1)'
+                    ],
+                    borderWidth: 3,
+                    hoverOffset: 10,
+                    spacing: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        display: false // We have custom legend
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + '%';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 2000,
+                    easing: 'easeInOutQuart',
+                }
+            }
+        });
+
+        this.charts.set('skillDistribution', chart);
+    }
+
+    initializeKPIAnimations() {
+        const kpiCards = document.querySelectorAll('.kpi-card');
+        
+        kpiCards.forEach((card, index) => {
+            // Add entrance animation delay
+            card.style.animationDelay = `${index * 0.1}s`;
+            
+            // Add hover effects for counters
+            const counter = card.querySelector('.counter');
+            if (counter) {
+                card.addEventListener('mouseenter', () => {
+                    this.animateCounter(counter);
+                });
+            }
+
+            // Add trend indicator animations
+            const trend = card.querySelector('.kpi-trend');
+            if (trend) {
+                trend.addEventListener('mouseenter', () => {
+                    trend.style.transform = 'scale(1.1)';
+                });
+                
+                trend.addEventListener('mouseleave', () => {
+                    trend.style.transform = 'scale(1)';
+                });
+            }
+        });
+    }
+
+    animateCounter(counterElement) {
+        const target = parseInt(counterElement.getAttribute('data-target'));
+        const current = parseInt(counterElement.textContent);
+        
+        if (current < target) {
+            const increment = Math.ceil((target - current) / 10);
+            counterElement.textContent = Math.min(current + increment, target);
+            
+            setTimeout(() => this.animateCounter(counterElement), 50);
+        }
+    }
+
+    initializeProgressBars() {
+        const progressBars = document.querySelectorAll('.progress-fill');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const progressBar = entry.target;
+                    const percentage = progressBar.getAttribute('data-percentage');
+                    
+                    setTimeout(() => {
+                        progressBar.style.width = percentage + '%';
+                        this.addProgressAnimation(progressBar);
+                    }, 500);
+                    
+                    observer.unobserve(progressBar);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        progressBars.forEach(bar => observer.observe(bar));
+    }
+
+    addProgressAnimation(progressBar) {
+        // Add a pulse effect when progress completes
+        progressBar.addEventListener('transitionend', () => {
+            progressBar.style.animation = 'pulse 0.5s ease-in-out';
+            setTimeout(() => {
+                progressBar.style.animation = '';
+            }, 500);
+        });
+    }
+
+    initializeTimelineInteractions() {
+        const milestones = document.querySelectorAll('.milestone');
+        
+        milestones.forEach((milestone, index) => {
+            const marker = milestone.querySelector('.milestone-marker');
+            const content = milestone.querySelector('.milestone-content');
+            
+            milestone.addEventListener('mouseenter', () => {
+                marker.style.transform = 'scale(1.3)';
+                marker.style.boxShadow = '0 0 20px rgba(245, 158, 11, 0.6)';
+                content.style.transform = 'translateY(-5px)';
+            });
+            
+            milestone.addEventListener('mouseleave', () => {
+                marker.style.transform = 'scale(1)';
+                marker.style.boxShadow = 'var(--shadow-lg)';
+                content.style.transform = 'translateY(0)';
+            });
+
+            // Add click interaction for detailed view
+            milestone.addEventListener('click', () => {
+                this.showMilestoneDetails(index + 1);
+            });
+        });
+    }
+
+    showMilestoneDetails(week) {
+        // Create modal or expanded view for milestone details
+        const details = {
+            1: {
+                title: 'Banking Operations Orientation',
+                description: 'Introduction to DenizBank systems, policies, and procedures. Learning fundamental banking operations.',
+                achievements: ['System access setup', 'Policy training completion', 'Department orientation']
+            },
+            2: {
+                title: 'Financial Analysis Training',
+                description: 'Deep dive into financial analysis methodologies and loan assessment procedures.',
+                achievements: ['Credit analysis training', 'Risk evaluation methods', 'Financial modeling basics']
+            },
+            3: {
+                title: 'Risk Assessment Mastery',
+                description: 'Advanced training in risk management frameworks and compliance procedures.',
+                achievements: ['Risk model application', 'Compliance protocol mastery', 'Stress testing participation']
+            },
+            4: {
+                title: 'Independent Project Leadership',
+                description: 'Leading independent analysis projects and client interaction responsibilities.',
+                achievements: ['Project leadership', 'Client presentation', 'Team collaboration']
+            }
+        };
+
+        const detail = details[week];
+        if (detail) {
+            // For now, just log the details (could be expanded to show modal)
+            console.log(`Week ${week}: ${detail.title}`, detail);
+        }
+    }
+
+    animatePerformanceChart() {
+        const chart = this.charts.get('performance');
+        if (chart) {
+            chart.update('active');
+        }
+    }
+
+    animateGrowthTimeline() {
+        const milestones = document.querySelectorAll('.milestone');
+        milestones.forEach((milestone, index) => {
+            setTimeout(() => {
+                milestone.style.animation = 'bounce 0.6s ease-in-out';
+                setTimeout(() => {
+                    milestone.style.animation = '';
+                }, 600);
+            }, index * 200);
+        });
+    }
+
+    // Method to update charts theme
+    updateChartsTheme() {
+        this.charts.forEach(chart => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            
+            chart.options.scales.y.ticks.color = isDark ? '#cbd5e1' : '#64748b';
+            chart.options.scales.x.ticks.color = isDark ? '#cbd5e1' : '#64748b';
+            chart.options.scales.y.grid.color = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            chart.update();
+        });
+    }
+
+    // Enhanced intersection observer for staggered animations
+    createStaggeredAnimation(elements, animationClass, delay = 100) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add(animationClass);
+                    }, index * delay);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        elements.forEach(element => observer.observe(element));
+    }
+
+    destroy() {
+        // Clean up charts and timers
+        this.charts.forEach(chart => chart.destroy());
+        this.charts.clear();
+        
+        this.animationTimers.forEach(timer => clearTimeout(timer));
+        this.animationTimers = [];
     }
 }
 
@@ -1744,7 +2129,7 @@ class App {
                 this.components.set('dataVisualization', new DataVisualization());
             }, 500);
 
-            // Enhanced experience section (initialize immediately)
+            // Advanced experience dashboard (initialize immediately)
             this.components.set('experience', new ExperienceManager());
 
             console.log('🚀 Application initialized successfully');
