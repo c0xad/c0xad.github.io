@@ -13,6 +13,9 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Chart.js for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     
@@ -156,8 +159,8 @@
                     </div>
                 </div>
                 <div class="about-image">
-                    <div class="image-placeholder">
-                        <i class="fas fa-user-graduate"></i>
+                    <div class="image-placeholder" role="img" aria-label="Portrait of Eren Gündemir, Econometrician and Data Scientist">
+                        <i class="fas fa-user-graduate" aria-hidden="true"></i>
                     </div>
                     <div class="social-links">
                         <a href="https://github.com/c0xad" target="_blank" class="social-link">
@@ -701,11 +704,13 @@
                             </p>
                         </div>
 
-                        <!-- Interactive Dashboard for German Reform Research -->
-                        <div class="research-dashboard">
-                            <h4><i class="fas fa-chart-line"></i> Interactive Research Dashboard</h4>
+                        <!-- Advanced Interactive Research Dashboard -->
+                        <div class="research-dashboard card-premium">
+                            <h4 class="text-gradient"><i class="fas fa-chart-line"></i> Advanced Research Analytics Dashboard</h4>
+                            
+                            <!-- Key Metrics Overview -->
                             <div class="dashboard-grid">
-                                <div class="dashboard-card">
+                                <div class="dashboard-card glass-effect glow-on-hover">
                                     <div class="dashboard-metric">
                                         <span class="metric-value" data-target="25.4">0</span>
                                         <span class="metric-unit">%</span>
@@ -715,7 +720,7 @@
                                         <i class="fas fa-arrow-down"></i>
                                     </div>
                                 </div>
-                                <div class="dashboard-card">
+                                <div class="dashboard-card glass-effect glow-on-hover">
                                     <div class="dashboard-metric">
                                         <span class="metric-value" data-target="12">0</span>
                                         <span class="metric-label">Months to Recovery</span>
@@ -724,7 +729,7 @@
                                         <i class="fas fa-clock"></i>
                                     </div>
                                 </div>
-                                <div class="dashboard-card">
+                                <div class="dashboard-card glass-effect glow-on-hover">
                                     <div class="dashboard-metric">
                                         <span class="metric-value" data-target="1948">0</span>
                                         <span class="metric-label">Reform Year</span>
@@ -733,13 +738,62 @@
                                         <i class="fas fa-landmark"></i>
                                     </div>
                                 </div>
-                                <div class="dashboard-card">
+                                <div class="dashboard-card glass-effect glow-on-hover">
                                     <div class="dashboard-metric">
                                         <span class="metric-value" data-target="76">0</span>
                                         <span class="metric-label">Years of Analysis</span>
                                     </div>
                                     <div class="metric-icon">
                                         <i class="fas fa-history"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Charts Section -->
+                            <div class="charts-grid">
+                                <div class="chart-container glass-strong">
+                                    <h5 class="chart-title">Inflation Rate Trend</h5>
+                                    <canvas id="inflationChart" width="400" height="200"></canvas>
+                                </div>
+                                <div class="chart-container glass-strong">
+                                    <h5 class="chart-title">Economic Recovery Timeline</h5>
+                                    <canvas id="recoveryChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Research Methodology Breakdown -->
+                            <div class="methodology-section">
+                                <h5 class="section-subtitle text-gradient">Research Methodology</h5>
+                                <div class="methodology-grid">
+                                    <div class="method-card interactive-card">
+                                        <div class="method-icon">
+                                            <i class="fas fa-chart-area"></i>
+                                        </div>
+                                        <h6>Time Series Analysis</h6>
+                                        <p>ARIMA models and structural break tests</p>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" data-width="95%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="method-card interactive-card">
+                                        <div class="method-icon">
+                                            <i class="fas fa-project-diagram"></i>
+                                        </div>
+                                        <h6>Causal Inference</h6>
+                                        <p>Difference-in-differences methodology</p>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" data-width="88%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="method-card interactive-card">
+                                        <div class="method-icon">
+                                            <i class="fas fa-database"></i>
+                                        </div>
+                                        <h6>Data Sources</h6>
+                                        <p>Historical Bundesbank archives</p>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" data-width="92%"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -797,7 +851,7 @@
                     </div>
                 </div>
                 <div class="contact-form">
-                    <form id="contact-form">
+                    <form id="contact-form" action="https://formspree.io/f/xeojpgoj" method="POST">
                         <div class="form-group">
                             <input type="text" id="name" name="name" placeholder="Your Name" required>
                         </div>
@@ -810,6 +864,8 @@
                         <div class="form-group">
                             <textarea id="message" name="message" placeholder="Your Message" rows="5" required></textarea>
                         </div>
+                        <!-- Honeypot field for spam protection -->
+                        <input type="text" name="_gotcha" style="display:none !important">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-paper-plane"></i> Send Message
                         </button>

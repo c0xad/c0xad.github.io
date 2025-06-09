@@ -12,15 +12,21 @@ const contactForm = document.getElementById('contact-form');
 // Enhanced Visual Effects Manager
 class VisualEffectsManager {
     constructor() {
+        this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         this.init();
     }
 
     init() {
-        this.initializeParallaxEffect();
+        // Only initialize motion-heavy effects if user doesn't prefer reduced motion
+        if (!this.prefersReducedMotion) {
+            this.initializeParallaxEffect();
+            this.initializeScrollAnimations();
+            this.initializeCursorEffects();
+        }
+        
+        // Always initialize these as they're less problematic
         this.initializeGlowEffects();
         this.initializeHoverAnimations();
-        this.initializeScrollAnimations();
-        this.initializeCursorEffects();
     }
 
     initializeParallaxEffect() {
@@ -33,7 +39,7 @@ class VisualEffectsManager {
             parallaxElements.forEach(element => {
                 element.style.transform = `translate3d(0, ${rate}px, 0)`;
             });
-        });
+        }, { passive: true });
     }
 
     initializeGlowEffects() {
@@ -220,6 +226,15 @@ class ThemeManager {
     toggleTheme() {
         const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
         this.setTheme(newTheme);
+        
+        // Update charts theme if data visualization exists
+        const app = window.app;
+        if (app) {
+            const dataViz = app.getComponent('dataVisualization');
+            if (dataViz && dataViz.updateChartsTheme) {
+                setTimeout(() => dataViz.updateChartsTheme(), 100);
+            }
+        }
     }
 }
 
@@ -248,7 +263,7 @@ class NavigationManager {
         window.addEventListener('scroll', () => {
             this.updateActiveLink();
             this.updateNavbarBackground();
-        });
+        }, { passive: true });
 
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
@@ -492,7 +507,7 @@ class FormHandler {
         }
     }
 
-    handleSubmit(e) {
+    async handleSubmit(e) {
         e.preventDefault();
         
         const formData = new FormData(contactForm);
@@ -504,13 +519,36 @@ class FormHandler {
             return;
         }
 
-        // Simulate form submission
-        this.showMessage('Sending message...', 'info');
+        // Show loading state
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        submitBtn.disabled = true;
         
-        setTimeout(() => {
-            this.showMessage('Thank you for your message! I\'ll get back to you soon.', 'success');
-            contactForm.reset();
-        }, 1500);
+        try {
+            // Send to Formspree endpoint (replace with your actual endpoint)
+            const response = await fetch('https://formspree.io/f/xeojpgoj', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                this.showMessage('Thank you for your message! I\'ll get back to you soon.', 'success');
+                contactForm.reset();
+            } else {
+                throw new Error('Failed to send message');
+            }
+        } catch (error) {
+            console.error('Form submission error:', error);
+            this.showMessage('Sorry, there was an error sending your message. Please try again or contact me directly.', 'error');
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
     }
 
     validateForm(data) {
@@ -728,7 +766,7 @@ class SmoothScroll {
                 scrollToTopBtn.style.visibility = 'hidden';
                 scrollToTopBtn.style.transform = 'translateY(10px)';
             }
-        });
+        }, { passive: true });
 
         // Click handler
         scrollToTopBtn.addEventListener('click', () => {
@@ -851,6 +889,367 @@ class PapersFilter {
     }
 }
 
+// Advanced Data Visualization Manager
+class DataVisualization {
+    constructor() {
+        this.charts = new Map();
+        this.init();
+    }
+
+    init() {
+        this.initializeCharts();
+        this.animateProgressBars();
+        this.initializeCounterAnimations();
+    }
+
+    initializeCharts() {
+        // Initialize inflation rate chart
+        const inflationCtx = document.getElementById('inflationChart');
+        if (inflationCtx) {
+            this.createInflationChart(inflationCtx);
+        }
+
+        // Initialize recovery timeline chart
+        const recoveryCtx = document.getElementById('recoveryChart');
+        if (recoveryCtx) {
+            this.createRecoveryChart(recoveryCtx);
+        }
+    }
+
+    createInflationChart(ctx) {
+        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDarkTheme ? '#f8fafc' : '#0f172a';
+        const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['1945', '1946', '1947', '1948', '1949', '1950', '1951', '1952'],
+                datasets: [{
+                    label: 'Inflation Rate (%)',
+                    data: [85.2, 42.1, 18.9, -12.3, -5.1, 2.1, 8.4, 3.2],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#3b82f6',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    fill: true
+                }, {
+                    label: 'Policy Implementation',
+                    data: [null, null, null, -12.3, null, null, null, null],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#ef4444',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 3,
+                    pointRadius: 8,
+                    pointHoverRadius: 12,
+                    showLine: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: textColor,
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: isDarkTheme ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: gridColor,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: {
+                                size: 11,
+                                weight: '500'
+                            }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: gridColor,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: textColor,
+                            font: {
+                                size: 11,
+                                weight: '500'
+                            },
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeInOutQuart'
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+
+        this.charts.set('inflation', chart);
+    }
+
+    createRecoveryChart(ctx) {
+        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDarkTheme ? '#f8fafc' : '#0f172a';
+        const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Recovery Phase 1', 'Recovery Phase 2', 'Recovery Phase 3', 'Stabilization'],
+                datasets: [{
+                    data: [25.4, 35.2, 28.1, 11.3],
+                    backgroundColor: [
+                        '#3b82f6',
+                        '#10b981',
+                        '#f59e0b',
+                        '#8b5cf6'
+                    ],
+                    borderColor: isDarkTheme ? '#1e293b' : '#ffffff',
+                    borderWidth: 3,
+                    hoverBorderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: textColor,
+                            font: {
+                                size: 11,
+                                weight: '500'
+                            },
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: isDarkTheme ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + '%';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 2000,
+                    easing: 'easeInOutQuart'
+                }
+            }
+        });
+
+        this.charts.set('recovery', chart);
+    }
+
+    animateProgressBars() {
+        const progressBars = document.querySelectorAll('.progress-fill');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const progressBar = entry.target;
+                    const targetWidth = progressBar.getAttribute('data-width');
+                    
+                    setTimeout(() => {
+                        progressBar.style.width = targetWidth;
+                    }, 300);
+                    
+                    observer.unobserve(progressBar);
+                }
+            });
+        }, {
+            threshold: 0.5
+        });
+
+        progressBars.forEach(bar => {
+            observer.observe(bar);
+        });
+    }
+
+    initializeCounterAnimations() {
+        // Enhanced counter animations for dashboard metrics
+        const dashboardMetrics = document.querySelectorAll('.research-dashboard .metric-value');
+        
+        dashboardMetrics.forEach(metric => {
+            if (!metric.getAttribute('data-target')) return;
+            
+            const target = parseFloat(metric.getAttribute('data-target'));
+            const counter = new CounterAnimation(metric, target, 2500);
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        counter.animate();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.7
+            });
+            
+            observer.observe(metric);
+        });
+    }
+
+    updateChartsTheme() {
+        // Update chart colors when theme changes
+        this.charts.forEach(chart => {
+            const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDarkTheme ? '#f8fafc' : '#0f172a';
+            const gridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            chart.options.plugins.legend.labels.color = textColor;
+            chart.options.scales.x.ticks.color = textColor;
+            chart.options.scales.y.ticks.color = textColor;
+            chart.options.scales.x.grid.color = gridColor;
+            chart.options.scales.y.grid.color = gridColor;
+            
+            chart.update('none');
+        });
+    }
+
+    destroy() {
+        this.charts.forEach(chart => {
+            chart.destroy();
+        });
+        this.charts.clear();
+    }
+}
+
+// Enhanced Skill Visualization
+class SkillVisualization {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        this.enhanceSkillBars();
+        this.addSkillHoverEffects();
+    }
+
+    enhanceSkillBars() {
+        const skillBars = document.querySelectorAll('.skill-progress');
+        
+        skillBars.forEach((bar, index) => {
+            const width = bar.getAttribute('data-width');
+            const skillItem = bar.closest('.skill-item');
+            
+            // Add animated number counter
+            const percentage = parseInt(width);
+            const counter = document.createElement('span');
+            counter.className = 'skill-percentage';
+            counter.style.cssText = `
+                position: absolute;
+                right: 0;
+                top: 0;
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--primary-color);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            
+            const skillName = skillItem.querySelector('.skill-name');
+            skillName.style.position = 'relative';
+            skillName.appendChild(counter);
+            
+            // Animate counter when skill bar animates
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            let current = 0;
+                            const increment = percentage / 30;
+                            const timer = setInterval(() => {
+                                current += increment;
+                                if (current >= percentage) {
+                                    current = percentage;
+                                    clearInterval(timer);
+                                }
+                                counter.textContent = Math.round(current) + '%';
+                                counter.style.opacity = '1';
+                            }, 50);
+                        }, index * 200 + 500);
+                        
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.5
+            });
+            
+            observer.observe(skillItem);
+        });
+    }
+
+    addSkillHoverEffects() {
+        const skillCategories = document.querySelectorAll('.skill-category');
+        
+        skillCategories.forEach(category => {
+            category.addEventListener('mouseenter', () => {
+                const icon = category.querySelector('h3 i');
+                if (icon) {
+                    icon.style.animation = 'wiggle 0.6s ease-in-out';
+                }
+            });
+            
+            category.addEventListener('mouseleave', () => {
+                const icon = category.querySelector('h3 i');
+                if (icon) {
+                    icon.style.animation = 'none';
+                }
+            });
+        });
+    }
+}
+
 // Main Application
 class App {
     constructor() {
@@ -869,6 +1268,9 @@ class App {
 
     initializeComponents() {
         try {
+            // Initialize accessibility improvements
+            this.initializeAccessibility();
+            
             // Core components
             this.components.set('theme', new ThemeManager());
             this.components.set('navigation', new NavigationManager());
@@ -893,15 +1295,72 @@ class App {
                 setTimeout(() => typingAnimation.start(), 500);
             }
 
-            // Particles background (optional, can be disabled for performance)
-            if (window.innerWidth > 768) {
+            // Particles background (optional, can be disabled for performance and reduced motion)
+            if (window.innerWidth > 768 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 this.components.set('particles', new ParticlesBackground());
             }
+
+            // Advanced data visualization
+            this.components.set('dataVisualization', new DataVisualization());
+
+            // Enhanced skill visualization
+            this.components.set('skillVisualization', new SkillVisualization());
 
             console.log('🚀 Application initialized successfully');
             console.log('✨ Enhanced visual effects activated');
         } catch (error) {
             console.error('❌ Error initializing application:', error);
+        }
+    }
+
+    initializeAccessibility() {
+        // Add aria-hidden to all decorative icons
+        const decorativeIcons = document.querySelectorAll('.fas, .fab');
+        decorativeIcons.forEach(icon => {
+            // Skip icons that already have aria attributes or are in buttons/links with text
+            if (!icon.hasAttribute('aria-hidden') && 
+                !icon.hasAttribute('aria-label') && 
+                !icon.closest('button, a')?.textContent.trim()) {
+                icon.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        // Add skip navigation link
+        this.addSkipNavigation();
+    }
+
+    addSkipNavigation() {
+        const skipNav = document.createElement('a');
+        skipNav.href = '#main-content';
+        skipNav.className = 'skip-nav';
+        skipNav.textContent = 'Skip to main content';
+        skipNav.style.cssText = `
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: var(--primary-color);
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 10000;
+            transition: top 0.3s;
+        `;
+        
+        skipNav.addEventListener('focus', () => {
+            skipNav.style.top = '6px';
+        });
+        
+        skipNav.addEventListener('blur', () => {
+            skipNav.style.top = '-40px';
+        });
+
+        document.body.insertBefore(skipNav, document.body.firstChild);
+        
+        // Add id to main content area
+        const heroSection = document.getElementById('home');
+        if (heroSection) {
+            heroSection.setAttribute('id', 'main-content');
         }
     }
 
