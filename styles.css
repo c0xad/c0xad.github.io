@@ -4021,6 +4021,7 @@ section {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: var(--space-lg);
     margin-bottom: var(--space-2xl);
+    transition: all 0.5s ease-out;
 }
 
 .kpi-card {
@@ -4229,6 +4230,7 @@ section {
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: var(--space-xl);
     margin-bottom: var(--space-2xl);
+    transition: all 0.5s ease-out;
 }
 
 .chart-container {
@@ -4316,6 +4318,7 @@ section {
     border-radius: var(--radius-xl);
     padding: var(--space-xl);
     border: 1px solid var(--border-light);
+    transition: all 0.5s ease-out;
 }
 
 .growth-timeline h5 {
@@ -4458,6 +4461,11 @@ section {
     0% { box-shadow: var(--shadow-lg); }
     50% { box-shadow: var(--shadow-xl), 0 0 30px rgba(37, 99, 235, 0.1); }
     100% { box-shadow: var(--shadow-lg); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Responsive Enhancements */

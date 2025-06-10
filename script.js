@@ -1590,21 +1590,16 @@ class ExperienceManager {
             experienceCard.classList.add('animated');
         }
 
-        // Start counters for basic metric cards
-        const basicCounters = document.querySelectorAll('.metric-card .counter, .kpi-card .counter');
-        basicCounters.forEach(counter => {
-            if (counter.counterInstance) {
-                setTimeout(() => {
-                    counter.counterInstance.animate();
-                }, 500);
-            }
-        });
-
-        // Start counters even without counter instances
-        const allCounters = document.querySelectorAll('.counter');
-        allCounters.forEach(counter => {
-            this.startCounter(counter);
-        });
+        // Start all counters automatically
+        setTimeout(() => {
+            const allCounters = document.querySelectorAll('.counter');
+            allCounters.forEach(counter => {
+                if (!counter.hasAnimated) {
+                    this.startCounter(counter);
+                    counter.hasAnimated = true;
+                }
+            });
+        }, 1000);
     }
 
     startCounter(element) {
@@ -1687,30 +1682,274 @@ class ExperienceDashboard {
     switchView(view) {
         this.currentView = view;
         
-        // Add view switching animation
+        // Add loading indicator
         const dashboard = document.querySelector('.premium-dashboard');
         if (dashboard) {
+            // Add loading state
+            dashboard.style.transition = 'all 0.3s ease-out';
             dashboard.style.transform = 'scale(0.98)';
             dashboard.style.opacity = '0.7';
+            
+            // Show loading indicator
+            this.showLoadingIndicator();
             
             setTimeout(() => {
                 dashboard.style.transform = 'scale(1)';
                 dashboard.style.opacity = '1';
                 this.updateViewContent(view);
-            }, 150);
+                this.hideLoadingIndicator();
+            }, 300);
+        }
+    }
+
+    showLoadingIndicator() {
+        const dashboard = document.querySelector('.premium-dashboard');
+        if (dashboard && !dashboard.querySelector('.loading-indicator')) {
+            const loader = document.createElement('div');
+            loader.className = 'loading-indicator';
+            loader.innerHTML = `
+                <div class="loader-spinner"></div>
+                <span>Loading ${this.currentView} data...</span>
+            `;
+            loader.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+                z-index: 10;
+            `;
+            
+            const spinner = loader.querySelector('.loader-spinner');
+            spinner.style.cssText = `
+                width: 24px;
+                height: 24px;
+                border: 2px solid var(--border-color);
+                border-top-color: var(--primary-color);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            `;
+            
+            dashboard.appendChild(loader);
+        }
+    }
+
+    hideLoadingIndicator() {
+        const loader = document.querySelector('.loading-indicator');
+        if (loader) {
+            loader.remove();
         }
     }
 
     updateViewContent(view) {
-        // This could be expanded to show different content based on view
         console.log(`Switching to ${view} view`);
         
-        // Trigger chart updates based on view
-        if (view === 'performance') {
-            this.animatePerformanceChart();
-        } else if (view === 'growth') {
-            this.animateGrowthTimeline();
+        const kpiSection = document.querySelector('.kpi-section');
+        const chartsSection = document.querySelector('.charts-section');
+        const timelineSection = document.querySelector('.growth-timeline');
+        
+        if (!kpiSection || !chartsSection || !timelineSection) return;
+
+        // Hide all sections first
+        kpiSection.style.display = 'none';
+        chartsSection.style.display = 'none';
+        timelineSection.style.display = 'none';
+
+        // Show relevant content based on view
+        switch(view) {
+            case 'overview':
+                kpiSection.style.display = 'grid';
+                chartsSection.style.display = 'grid';
+                timelineSection.style.display = 'block';
+                this.showOverviewData();
+                break;
+                
+            case 'performance':
+                kpiSection.style.display = 'grid';
+                chartsSection.style.display = 'grid';
+                this.showPerformanceData();
+                this.animatePerformanceChart();
+                break;
+                
+            case 'growth':
+                timelineSection.style.display = 'block';
+                this.showGrowthData();
+                this.animateGrowthTimeline();
+                break;
         }
+
+        // Add fade in animation
+        const visibleSections = document.querySelectorAll('.kpi-section[style*="grid"], .charts-section[style*="grid"], .growth-timeline[style*="block"]');
+        visibleSections.forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                section.style.transition = 'all 0.5s ease-out';
+                section.style.opacity = '1';
+                section.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    }
+
+    showOverviewData() {
+        // Restore original overview data
+        const overviewData = [
+            { 
+                icon: 'fas fa-file-invoice-dollar',
+                value: '150',
+                unit: '+',
+                label: 'Loan Applications Analyzed',
+                trend: '+15%',
+                progress: 92,
+                description: '92% Processing Efficiency'
+            },
+            {
+                icon: 'fas fa-users',
+                value: '200',
+                unit: '+',
+                label: 'Customer Engagements',
+                trend: '+22%',
+                progress: 88,
+                description: '88% Satisfaction Score'
+            },
+            {
+                icon: 'fas fa-chart-line',
+                value: '25',
+                unit: '+',
+                label: 'Financial Reports',
+                trend: '+18%',
+                progress: 95,
+                description: '95% Accuracy Rate'
+            },
+            {
+                icon: 'fas fa-shield-alt',
+                value: '12',
+                unit: '',
+                label: 'Risk Models Applied',
+                trend: '+8%',
+                progress: 90,
+                description: '90% Model Precision'
+            }
+        ];
+
+        this.updateKPICards(overviewData);
+    }
+
+    showPerformanceData() {
+        // Update KPI cards with performance-focused metrics
+        const kpiCards = document.querySelectorAll('.kpi-card');
+        const performanceData = [
+            { 
+                icon: 'fas fa-clock',
+                value: '2.3',
+                unit: 'min',
+                label: 'Avg Processing Time',
+                trend: '+12%',
+                progress: 88,
+                description: 'Average time per application'
+            },
+            {
+                icon: 'fas fa-target',
+                value: '94',
+                unit: '%',
+                label: 'Quality Score',
+                trend: '+8%',
+                progress: 94,
+                description: 'Analysis accuracy rate'
+            },
+            {
+                icon: 'fas fa-users-cog',
+                value: '15',
+                unit: '',
+                label: 'Team Collaborations',
+                trend: '+25%',
+                progress: 85,
+                description: 'Cross-departmental projects'
+            },
+            {
+                icon: 'fas fa-award',
+                value: '3',
+                unit: '',
+                label: 'Process Improvements',
+                trend: '+100%',
+                progress: 90,
+                description: 'Workflow optimizations implemented'
+            }
+        ];
+
+        this.updateKPICards(performanceData);
+    }
+
+    showGrowthData() {
+        // Add growth-specific content to timeline
+        const timeline = document.querySelector('.growth-timeline');
+        if (timeline) {
+            // Add skill progression indicators
+            const milestones = timeline.querySelectorAll('.milestone');
+            milestones.forEach((milestone, index) => {
+                const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+                const skillLevel = skillLevels[index] || 'Expert';
+                
+                const skillIndicator = milestone.querySelector('.skill-level') || document.createElement('div');
+                skillIndicator.className = 'skill-level';
+                skillIndicator.textContent = skillLevel;
+                skillIndicator.style.cssText = `
+                    font-size: 0.7rem;
+                    color: var(--accent-color);
+                    font-weight: 600;
+                    margin-top: 4px;
+                `;
+                
+                const content = milestone.querySelector('.milestone-content');
+                if (content && !milestone.querySelector('.skill-level')) {
+                    content.appendChild(skillIndicator);
+                }
+            });
+        }
+    }
+
+    updateKPICards(data) {
+        const kpiCards = document.querySelectorAll('.kpi-card');
+        
+        kpiCards.forEach((card, index) => {
+            if (data[index]) {
+                const iconElement = card.querySelector('.kpi-icon i');
+                const counterElement = card.querySelector('.counter');
+                const unitElement = card.querySelector('.kpi-unit');
+                const labelElement = card.querySelector('.kpi-label');
+                const trendElement = card.querySelector('.kpi-trend span');
+                const progressElement = card.querySelector('.progress-fill');
+                const descriptionElement = card.querySelector('.progress-text');
+
+                if (iconElement) iconElement.className = data[index].icon;
+                if (counterElement) {
+                    counterElement.textContent = '0'; // Reset to 0 before animating
+                    counterElement.setAttribute('data-target', data[index].value);
+                    counterElement.hasAnimated = false; // Reset animation flag
+                }
+                if (unitElement) unitElement.textContent = data[index].unit;
+                if (labelElement) labelElement.textContent = data[index].label;
+                if (trendElement) trendElement.textContent = data[index].trend;
+                if (progressElement) progressElement.setAttribute('data-percentage', data[index].progress);
+                if (descriptionElement) descriptionElement.textContent = data[index].description;
+
+                // Animate the updated progress bar and counter
+                setTimeout(() => {
+                    if (progressElement) {
+                        progressElement.style.width = data[index].progress + '%';
+                    }
+                    if (counterElement) {
+                        this.animateCounter(counterElement);
+                    }
+                }, 200);
+            }
+        });
     }
 
     initializeCharts() {
@@ -1740,6 +1979,7 @@ class ExperienceDashboard {
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
+                    hoverBackgroundColor: 'rgba(37, 99, 235, 1)',
                 }, {
                     label: 'Risk Assessments',
                     data: [5, 10, 15, 20, 25, 28, 30, 35],
@@ -1748,6 +1988,7 @@ class ExperienceDashboard {
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
+                    hoverBackgroundColor: 'rgba(16, 185, 129, 1)',
                 }]
             },
             options: {
@@ -1864,17 +2105,28 @@ class ExperienceDashboard {
     initializeKPIAnimations() {
         const kpiCards = document.querySelectorAll('.kpi-card');
         
+        // Auto-start counters when section becomes visible
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counter = entry.target.querySelector('.counter');
+                    if (counter && !counter.hasAnimated) {
+                        setTimeout(() => {
+                            this.animateCounter(counter);
+                            counter.hasAnimated = true;
+                        }, 500);
+                    }
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
         kpiCards.forEach((card, index) => {
             // Add entrance animation delay
             card.style.animationDelay = `${index * 0.1}s`;
             
-            // Add hover effects for counters
-            const counter = card.querySelector('.counter');
-            if (counter) {
-                card.addEventListener('mouseenter', () => {
-                    this.animateCounter(counter);
-                });
-            }
+            // Observe card for auto-animation
+            observer.observe(card);
 
             // Add trend indicator animations
             const trend = card.querySelector('.kpi-trend');
