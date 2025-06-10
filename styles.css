@@ -1085,6 +1085,7 @@ p {
 .code-line:nth-child(5) { animation-delay: 1.3s; }
 .code-line:nth-child(6) { animation-delay: 1.5s; }
 
+.uncolored-comment { color: inherit !important; }
 .code-comment { color: #6b7280; }
 .code-keyword { color: #3b82f6; font-weight: 600; }
 .code-string { color: #10b981; }
