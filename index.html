@@ -36,6 +36,10 @@
     
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard-extras.css">
+    
+    <!-- Dashboard Module -->
+    <script src="dashboard.js" defer></script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -438,104 +442,104 @@
                             <div class="impact-dashboard premium-dashboard">
                                 <div class="dashboard-header">
                                     <h4><i class="fas fa-chart-area"></i> Professional Impact Analytics</h4>
-                                    <div class="dashboard-controls">
-                                        <button class="dashboard-btn active" data-view="overview">Overview</button>
-                                        <button class="dashboard-btn" data-view="performance">Performance</button>
-                                        <button class="dashboard-btn" data-view="growth">Growth</button>
+                                    <div class="dashboard-controls" role="tablist" aria-label="Dashboard Analytics">
+                                        <button class="dashboard-btn active" role="tab" aria-selected="true" tabindex="0" data-tab="overview">Overview</button>
+                                        <button class="dashboard-btn" role="tab" aria-selected="false" tabindex="-1" data-tab="performance">Performance</button>
+                                        <button class="dashboard-btn" role="tab" aria-selected="false" tabindex="-1" data-tab="growth">Growth</button>
                                     </div>
                                 </div>
 
                                 <!-- Key Performance Indicators -->
                                 <div class="kpi-section">
-                                    <div class="kpi-card premium-card">
+                                    <div class="kpi-card premium-card" data-card-index="0">
                                         <div class="kpi-header">
                                             <div class="kpi-icon">
                                                 <i class="fas fa-file-invoice-dollar"></i>
                                             </div>
                                             <div class="kpi-trend positive">
                                                 <i class="fas fa-arrow-up"></i>
-                                                <span>+15%</span>
+                                                <span class="trend-value">+15%</span>
                                             </div>
                                         </div>
                                         <div class="kpi-value">
                                             <span class="counter" data-target="150">0</span>
                                             <span class="kpi-unit">+</span>
                                         </div>
-                                        <div class="kpi-label">Loan Applications Analyzed</div>
+                                        <div class="kpi-label">Loading...</div>
                                         <div class="kpi-progress">
                                             <div class="progress-bar">
-                                                <div class="progress-fill" data-percentage="92"></div>
+                                                <div class="progress-fill" data-percentage="0"></div>
                                             </div>
-                                            <span class="progress-text">92% Processing Efficiency</span>
+                                            <span class="progress-text">--% Efficiency</span>
                                         </div>
                                     </div>
 
-                                    <div class="kpi-card premium-card">
+                                    <div class="kpi-card premium-card" data-card-index="1">
                                         <div class="kpi-header">
                                             <div class="kpi-icon">
                                                 <i class="fas fa-users"></i>
                                             </div>
                                             <div class="kpi-trend positive">
                                                 <i class="fas fa-arrow-up"></i>
-                                                <span>+22%</span>
+                                                <span class="trend-value">+22%</span>
                                             </div>
                                         </div>
                                         <div class="kpi-value">
                                             <span class="counter" data-target="200">0</span>
                                             <span class="kpi-unit">+</span>
                                         </div>
-                                        <div class="kpi-label">Customer Engagements</div>
+                                        <div class="kpi-label">Loading...</div>
                                         <div class="kpi-progress">
                                             <div class="progress-bar">
-                                                <div class="progress-fill" data-percentage="88"></div>
+                                                <div class="progress-fill" data-percentage="0"></div>
                                             </div>
-                                            <span class="progress-text">88% Satisfaction Score</span>
+                                            <span class="progress-text">--% Score</span>
                                         </div>
                                     </div>
 
-                                    <div class="kpi-card premium-card">
+                                    <div class="kpi-card premium-card" data-card-index="2">
                                         <div class="kpi-header">
                                             <div class="kpi-icon">
                                                 <i class="fas fa-chart-line"></i>
                                             </div>
                                             <div class="kpi-trend positive">
                                                 <i class="fas fa-arrow-up"></i>
-                                                <span>+18%</span>
+                                                <span class="trend-value">+18%</span>
                                             </div>
                                         </div>
                                         <div class="kpi-value">
                                             <span class="counter" data-target="25">0</span>
                                             <span class="kpi-unit">+</span>
                                         </div>
-                                        <div class="kpi-label">Financial Reports</div>
+                                        <div class="kpi-label">Loading...</div>
                                         <div class="kpi-progress">
                                             <div class="progress-bar">
-                                                <div class="progress-fill" data-percentage="95"></div>
+                                                <div class="progress-fill" data-percentage="0"></div>
                                             </div>
-                                            <span class="progress-text">95% Accuracy Rate</span>
+                                            <span class="progress-text">--% Rate</span>
                                         </div>
                                     </div>
 
-                                    <div class="kpi-card premium-card">
+                                    <div class="kpi-card premium-card" data-card-index="3">
                                         <div class="kpi-header">
                                             <div class="kpi-icon">
                                                 <i class="fas fa-shield-alt"></i>
                                             </div>
                                             <div class="kpi-trend positive">
                                                 <i class="fas fa-arrow-up"></i>
-                                                <span>+8%</span>
+                                                <span class="trend-value">+8%</span>
                                             </div>
                                         </div>
                                         <div class="kpi-value">
                                             <span class="counter" data-target="12">0</span>
                                             <span class="kpi-unit"></span>
                                         </div>
-                                        <div class="kpi-label">Risk Models Applied</div>
+                                        <div class="kpi-label">Loading...</div>
                                         <div class="kpi-progress">
                                             <div class="progress-bar">
-                                                <div class="progress-fill" data-percentage="90"></div>
+                                                <div class="progress-fill" data-percentage="0"></div>
                                             </div>
-                                            <span class="progress-text">90% Model Precision</span>
+                                            <span class="progress-text">--% Precision</span>
                                         </div>
                                     </div>
                                 </div>

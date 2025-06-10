@@ -1,0 +1,23 @@
+/* Dashboard Enhancement Styles - Keep under 20 lines */
+
+/* Fade transition for tab switching */
+.kpi-card {
+  transition: opacity 200ms ease, transform 150ms ease;
+}
+
+/* Focus indicators for accessibility */
+.dashboard-btn:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .kpi-card { border-width: 2px; }
+  .dashboard-btn { border: 2px solid currentColor; }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .kpi-card, .progress-fill { transition: none !important; }
+} 
