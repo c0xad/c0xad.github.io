@@ -1359,7 +1359,7 @@ class DataVisualization {
             chart.options.scales.x.grid.color = gridColor;
             chart.options.scales.y.grid.color = gridColor;
             
-            chart.update('none');
+            chart.update();
         });
     }
 
@@ -1368,93 +1368,6 @@ class DataVisualization {
             chart.destroy();
         });
         this.charts.clear();
-    }
-}
-
-// Enhanced Skill Visualization
-class SkillVisualization {
-    constructor() {
-        this.init();
-    }
-
-    init() {
-        this.enhanceSkillBars();
-        this.addSkillHoverEffects();
-    }
-
-    enhanceSkillBars() {
-        const skillBars = document.querySelectorAll('.skill-progress');
-        
-        skillBars.forEach((bar, index) => {
-            const width = bar.getAttribute('data-width');
-            const skillItem = bar.closest('.skill-item');
-            
-            // Add animated number counter
-            const percentage = parseInt(width);
-            const counter = document.createElement('span');
-            counter.className = 'skill-percentage';
-            counter.style.cssText = `
-                position: absolute;
-                right: 0;
-                top: 0;
-                font-size: 0.75rem;
-                font-weight: 600;
-                color: var(--primary-color);
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            `;
-            
-            const skillName = skillItem.querySelector('.skill-name');
-            skillName.style.position = 'relative';
-            skillName.appendChild(counter);
-            
-            // Animate counter when skill bar animates
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        setTimeout(() => {
-                            let current = 0;
-                            const increment = percentage / 30;
-                            const timer = setInterval(() => {
-                                current += increment;
-                                if (current >= percentage) {
-                                    current = percentage;
-                                    clearInterval(timer);
-                                }
-                                counter.textContent = Math.round(current) + '%';
-                                counter.style.opacity = '1';
-                            }, 50);
-                        }, index * 200 + 500);
-                        
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.5
-            });
-            
-            observer.observe(skillItem);
-        });
-    }
-
-    addSkillHoverEffects() {
-        const skillCategories = document.querySelectorAll('.skill-category');
-        
-        skillCategories.forEach(category => {
-            category.addEventListener('mouseenter', () => {
-                const icon = category.querySelector('h3 i');
-                if (icon) {
-                    icon.style.animation = 'wiggle 0.6s ease-in-out';
-                }
-            });
-            
-            category.addEventListener('mouseleave', () => {
-                const icon = category.querySelector('h3 i');
-                if (icon) {
-                    icon.style.animation = 'none';
-                }
-            });
-        });
     }
 }
 
@@ -1620,8 +1533,6 @@ class ExperienceManager {
 
         updateCounter();
     }
-
-    // Skill badges are now visible by default - no need for complex animations
 
     // Method to refresh animations (useful for theme changes)
     refreshAnimations() {
@@ -2351,9 +2262,6 @@ class App {
             if (window.innerWidth > 768 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 this.components.set('particles', new ParticlesBackground());
             }
-
-            // Enhanced skill visualization (initialize immediately)
-            this.components.set('skillVisualization', new SkillVisualization());
 
             // Advanced data visualization (delay to ensure Chart.js and DOM are ready)
             setTimeout(() => {
